@@ -1,0 +1,143 @@
+--- EXPORT/IMPORT REPORT ---
+
+1. EXPORT ANALYSIS:
+- Path: components/layout/BootGuard.tsx
+  Type: export const/function/type
+  Names: BootGuard
+
+- Path: components/layout/MainLayout.tsx
+  Type: export const/function/type
+  Names: MainLayout
+
+- Path: components/ui/CommandInput.tsx
+  Type: export const/function/type
+  Names: CommandInput
+
+- Path: components/ui/GlitchText.tsx
+  Type: export const/function/type
+  Names: GlitchText
+
+- Path: components/ui/index.ts
+  Type: 
+  Names: 
+
+- Path: components/ui/ProgressBar.tsx
+  Type: export const/function/type
+  Names: ProgressBar
+
+- Path: components/ui/ScanlineOverlay.tsx
+  Type: export const/function/type
+  Names: ScanlineOverlay
+
+- Path: components/ui/TerminalCard.tsx
+  Type: export const/function/type
+  Names: TerminalCard
+
+- Path: components/ui/TypewriterText.tsx
+  Type: export const/function/type
+  Names: TypewriterText
+
+- Path: pages/BootSequence.tsx
+  Type: export const/function/type
+  Names: BootSequence
+
+- Path: pages/Leaderboard.tsx
+  Type: export const/function/type
+  Names: Leaderboard
+
+- Path: pages/Login.tsx
+  Type: export const/function/type
+  Names: Login
+
+- Path: pages/Profile.tsx
+  Type: export const/function/type
+  Names: Profile
+
+- Path: pages/Quests.tsx
+  Type: export const/function/type
+  Names: Quests
+
+- Path: pages/Settings.tsx
+  Type: export const/function/type
+  Names: Settings
+
+- Path: pages/Terminal.tsx
+  Type: export const/function/type
+  Names: Terminal
+
+- Path: pages/WorldMap.tsx
+  Type: export const/function/type
+  Names: WorldMap
+
+- Path: stores/useFactionStore.ts
+  Type: export const/function/type
+  Names: FactionState, useFactionStore
+
+- Path: stores/useGameStore.ts
+  Type: export const/function/type
+  Names: GameState, useGameStore
+
+- Path: stores/useUIStore.ts
+  Type: export const/function/type
+  Names: UIState, useUIStore
+
+- Path: services/aiParser.ts
+  Type: export const/function/type
+  Names: parseAIResponse
+
+- Path: services/client.ts
+  Type: export const/function/type
+  Names: APIResponse, ApiClient
+
+- Path: services/fallbackContent.ts
+  Type: export const/function/type
+  Names: FallbackEntry, FALLBACK_ARCHIVE, getFallbackResponse
+
+- Path: services/localDB.ts
+  Type: export const/function/type
+  Names: saveUser, getUser, saveMessages, getMessages, saveQuests, getQuests, saveSettings, getSettings, setBootComplete, isBootComplete, clearAll, exportSave, importSave
+
+- Path: hooks/useOfflineDetect.ts
+  Type: export const/function/type
+  Names: useOfflineDetect
+
+- Path: hooks/useSlashCommands.ts
+  Type: export const/function/type
+  Names: useSlashCommands
+
+- Path: hooks/useTypewriter.ts
+  Type: export const/function/type
+  Names: useTypewriter
+
+- Path: utils/glitchEngine.ts
+  Type: export const/function/type
+  Names: getRandomGlitchChars, glitchText
+
+- Path: utils/soundManager.ts
+  Type: export const/function/type
+  Names: SoundManager
+
+- Path: utils/xpCalculator.ts
+  Type: export const/function/type
+  Names: getRankForPrestige, getXPProgress, getNextRank, calculatePrestigeGain
+
+- Path: constants/commands.ts
+  Type: export const/function/type
+  Names: Command, COMMANDS
+
+- Path: constants/factions.ts
+  Type: export const/function/type
+  Names: FactionData, FACTIONS
+
+- Path: constants/ranks.ts
+  Type: export const/function/type
+  Names: RankData, RANKS
+
+- Path: constants/sectors.ts
+  Type: export const/function/type
+  Names: SECTORS
+
+2. IMPORT CROSS-REFERENCE & MISMATCHES:
+No mismatches found. TypeScript strict build passes cleanly, and imports conform exactly to module exports.
+
+Files modified to fix mismatches/barrels: 0

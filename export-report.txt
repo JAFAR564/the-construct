@@ -1,0 +1,137 @@
+--- EXPORT REPORT ---
+
+1. File: components/layout/BootGuard.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: BootGuard
+
+1. File: components/layout/MainLayout.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: MainLayout
+
+1. File: components/ui/CommandInput.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: CommandInput
+
+1. File: components/ui/GlitchText.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: GlitchText
+
+1. File: components/ui/index.ts
+2. Uses "export default": No, Uses "export const/function": No
+3. Exported names: 
+
+1. File: components/ui/ProgressBar.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: ProgressBar
+
+1. File: components/ui/ScanlineOverlay.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: ScanlineOverlay
+
+1. File: components/ui/TerminalCard.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: TerminalCard
+
+1. File: components/ui/TypewriterText.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: TypewriterText
+
+1. File: pages/BootSequence.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: BootSequence
+
+1. File: pages/Leaderboard.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: Leaderboard
+
+1. File: pages/Login.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: Login
+
+1. File: pages/Profile.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: Profile
+
+1. File: pages/Quests.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: Quests
+
+1. File: pages/Settings.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: Settings
+
+1. File: pages/Terminal.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: Terminal
+
+1. File: pages/WorldMap.tsx
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: WorldMap
+
+1. File: stores/useFactionStore.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: useFactionStore
+
+1. File: stores/useGameStore.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: useGameStore
+
+1. File: stores/useUIStore.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: useUIStore
+
+1. File: services/aiParser.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: parseAIResponse
+
+1. File: services/client.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: ApiClient
+
+1. File: services/fallbackContent.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: FALLBACK_ARCHIVE, getFallbackResponse
+
+1. File: services/localDB.ts
+2. Uses "export default": No, Uses "export const/function": No
+3. Exported names: 
+
+1. File: hooks/useOfflineDetect.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: useOfflineDetect
+
+1. File: hooks/useSlashCommands.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: useSlashCommands
+
+1. File: hooks/useTypewriter.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: useTypewriter
+
+1. File: utils/glitchEngine.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: getRandomGlitchChars, glitchText
+
+1. File: utils/soundManager.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: SoundManager
+
+1. File: utils/xpCalculator.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: getRankForPrestige, getXPProgress, getNextRank, calculatePrestigeGain
+
+1. File: constants/commands.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: COMMANDS
+
+1. File: constants/factions.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: FACTIONS
+
+1. File: constants/ranks.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: RANKS
+
+1. File: constants/sectors.ts
+2. Uses "export default": No, Uses "export const/function": Yes
+3. Exported names: SECTORS

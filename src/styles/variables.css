@@ -1,0 +1,23 @@
+:root {
+  --bg-dark: #0D0D0D;
+  --bg-surface: #1A1A1A;
+  --bg-elevated: #252525;
+  --text-primary: #00FF41;
+  --text-secondary: #00CC33;
+  --text-muted: #666666;
+  --text-bright: #FFFFFF;
+  --accent-warning: #FFD700;
+  --accent-danger: #FF3333;
+  --accent-info: #00BFFF;
+  --faction-technocrats: #00D4FF;
+  --faction-keepers: #00FF41;
+  --faction-ironborn: #FF6600;
+  --faction-active: #00FF41;
+  /* Overridden by MainLayout JS */
+  --border-terminal: #333333;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+  --font-ui: 'Inter', 'Helvetica Neue', sans-serif;
+  --glow-primary: 0 0 5px #00FF41, 0 0 10px #00FF41, 0 0 20px rgba(0, 255, 65, 0.3);
+  --faction-glow: 0 0 5px #00FF41, 0 0 10px #00FF41;
+}
