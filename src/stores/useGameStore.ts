@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { User, ChatMessage, Quest, StatChange } from '@/types';
+import * as db from '@/services/supabaseDB';
 import * as localDB from '@/services/localDB';
+import { supabase, isSupabaseConfigured } from '@/services/supabase';
 import { ApiClient } from '@/services/client';
 import { getFallbackResponse } from '@/services/fallbackContent';
 import { getNextRank, getXPProgress } from '@/utils/xpCalculator';
@@ -80,21 +82,21 @@ export const useGameStore = create<GameState>((set, get) => ({
             if (nextRank) {
                 // Find prestige requirement
                 const nextRankData = RANKS.find(r => r.rank === nextRank);
-      if (nextRankData && user.prestige >= nextRankData.prestigeRequired) {
-        user.rank = nextRank;
-        user.xp -= required;
+                if (nextRankData && user.prestige >= nextRankData.prestigeRequired) {
+                    user.rank = nextRank;
+                    user.xp -= required;
 
-        SoundManager.playLevelUp();
+                    SoundManager.playLevelUp();
 
-        setTimeout(() => {
-          get().addMessage({
-            id: Date.now().toString(),
-            source: 'SYSTEM',
-            content: `PROMOTION ACHIEVED: Rank updated to ${nextRank}. Clearance level increased.`,
-            timestamp: new Date().toISOString()
-          });
-        }, 500);
-      }
+                    setTimeout(() => {
+                        get().addMessage({
+                            id: Date.now().toString(),
+                            source: 'SYSTEM',
+                            content: `PROMOTION ACHIEVED: Rank updated to ${nextRank}. Clearance level increased.`,
+                            timestamp: new Date().toISOString()
+                        });
+                    }, 500);
+                }
             }
         }
 
@@ -182,6 +184,33 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     initializeFromDB: async () => {
+        // Try Supabase first if configured
+        if (isSupabaseConfigured) {
+            try {
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+                if (authUser) {
+                    const user = await db.getUser(authUser.id);
+                    if (user) {
+                        const [messages, quests, equipment, abilities] = await Promise.all([
+                            db.getMessages(user.id),
+                            db.getQuests(user.id),
+                            db.getEquipment(user.id),
+                            db.getAbilities(user.id),
+                        ]);
+                        set({
+                            user: { ...user, equipment, abilities },
+                            messages,
+                            quests,
+                        });
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('[CONSTRUCT OS] Supabase init failed, falling back to local:', e);
+            }
+        }
+
+        // Fallback to localDB
         const [user, messages, quests] = await Promise.all([
             localDB.getUser(),
             localDB.getMessages(),
@@ -213,10 +242,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     persistToDB: async () => {
         const { user, messages, quests } = get();
-        const promises = [];
-        if (user) promises.push(localDB.saveUser(user));
-        if (messages.length > 0) promises.push(localDB.saveMessages(messages));
-        if (quests.length > 0) promises.push(localDB.saveQuests(quests));
+        const promises: Promise<void>[] = [];
+        if (user) promises.push(db.saveUser(user));
+        if (messages.length > 0) promises.push(db.saveMessages(user?.id, messages));
+        if (quests.length > 0) promises.push(db.saveQuests(user?.id, quests));
         await Promise.all(promises);
     }
 }));
