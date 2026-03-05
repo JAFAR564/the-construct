@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { TerminalCard } from '@/components/ui/TerminalCard';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { FACTIONS } from '@/constants/factions';
 import { DEFAULT_ABILITIES } from '@/constants/abilities';
+import { compressImage } from '@/utils/imageCompressor';
 import type { Equipment, Ability, EquipmentSlot, Alignment, Rarity } from '@/types';
 
 type ProfileTab = 'OVERVIEW' | 'ABILITIES' | 'EQUIPMENT' | 'BACKSTORY' | 'MEMORY LOG';
@@ -53,6 +54,8 @@ export const Profile: React.FC = () => {
     const [songDraft, setSongDraft] = useState('');
     const [tagInput, setTagInput] = useState('');
     const [backstoryInit, setBackstoryInit] = useState(false);
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (!user) {
         return (
@@ -147,16 +150,85 @@ export const Profile: React.FC = () => {
 
     // ====== TAB PANELS ======
 
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setAvatarUploading(true);
+        try {
+            const dataUrl = await compressImage(file);
+            updateUser({ avatarDataUrl: dataUrl });
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to process image.');
+        } finally {
+            setAvatarUploading(false);
+            // Reset input so re-selecting the same file triggers onChange
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const handleAvatarDelete = () => {
+        updateUser({ avatarDataUrl: undefined });
+    };
+
+    const avatarBtnStyle: React.CSSProperties = {
+        background: 'transparent', border: '1px solid var(--faction-active)',
+        color: 'var(--faction-active)', fontFamily: 'var(--font-mono)', fontSize: '9px',
+        cursor: 'pointer', padding: '3px 8px', textTransform: 'uppercase',
+    };
+    const avatarBtnDangerStyle: React.CSSProperties = {
+        ...avatarBtnStyle, borderColor: 'var(--accent-danger)', color: 'var(--accent-danger)',
+    };
+
     const renderOverview = () => (
         <>
+            {/* Hidden file input for avatar uploads */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleAvatarUpload}
+            />
+
             <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-                {/* ASCII avatar */}
+                {/* Avatar area */}
                 <div style={{
-                    border: `1px solid var(--faction-active)`, padding: 16, minWidth: 140,
+                    border: `1px solid var(--faction-active)`, padding: 12, minWidth: 140, maxWidth: 160,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 }}>
-                    <pre style={{ fontSize: '0.55rem', color: 'var(--faction-active)', lineHeight: 1.2, margin: 0 }}>{
-                        `    ╔══════╗
+                    {user.avatarDataUrl ? (
+                        <>
+                            <img
+                                src={user.avatarDataUrl}
+                                alt={user.designation}
+                                style={{
+                                    width: 120, height: 120, objectFit: 'cover',
+                                    border: '1px solid var(--faction-active)',
+                                    boxShadow: '0 0 8px var(--faction-active), 0 0 16px rgba(0,255,65,0.15)',
+                                    imageRendering: 'auto',
+                                }}
+                            />
+                            <div style={{ marginTop: 8, display: 'flex', gap: 4 }}>
+                                <button
+                                    style={avatarBtnStyle}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={avatarUploading}
+                                >
+                                    [CHANGE]
+                                </button>
+                                <button
+                                    style={avatarBtnDangerStyle}
+                                    onClick={handleAvatarDelete}
+                                    disabled={avatarUploading}
+                                >
+                                    [DELETE]
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <pre style={{ fontSize: '0.55rem', color: 'var(--faction-active)', lineHeight: 1.2, margin: 0 }}>{
+                                `    ╔══════╗
     ║ ◉  ◉ ║
     ║  ──  ║
     ║ ╲__╱ ║
@@ -166,8 +238,17 @@ export const Profile: React.FC = () => {
     ║      ║
     ╚══╤╤══╝
       ││`
-                    }</pre>
-                    <div style={{ marginTop: 8, fontSize: '10px', color: 'var(--faction-active)', textAlign: 'center', wordBreak: 'break-all' }}>
+                            }</pre>
+                            <button
+                                style={{ ...avatarBtnStyle, marginTop: 8 }}
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={avatarUploading}
+                            >
+                                {avatarUploading ? '[PROCESSING...]' : '[UPLOAD AVATAR]'}
+                            </button>
+                        </>
+                    )}
+                    <div style={{ marginTop: 6, fontSize: '10px', color: 'var(--faction-active)', textAlign: 'center', wordBreak: 'break-all' }}>
                         {user.designation}
                     </div>
                 </div>

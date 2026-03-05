@@ -9,7 +9,14 @@ import { DEFAULT_ABILITIES } from '@/constants/abilities';
 import { SoundManager } from '@/utils/soundManager';
 import type { Faction, ElementalAffinity, User } from '@/types';
 
-// Let's create proper styling for the layout elements
+// Helper to resolve a CSS variable reference like "var(--faction-technocrats)" to its computed hex value
+function resolveCSSColor(colorValue: string): string {
+    if (colorValue.startsWith('var(')) {
+        const varName = colorValue.slice(4, -1).trim();
+        return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || colorValue;
+    }
+    return colorValue;
+}
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -30,12 +37,13 @@ export const Login: React.FC = () => {
         }
     };
 
-  const handleFactionSelect = (f: typeof FACTIONS[0]) => {
-    setFaction(f.id);
-    document.documentElement.style.setProperty('--text-primary', f.color);
-    document.documentElement.style.setProperty('--glow-primary', `0 0 5px ${f.color}, 0 0 10px ${f.color}, 0 0 20px ${f.color}4D`);
-    SoundManager.playFactionSelect();
-  };
+    const handleFactionSelect = (f: typeof FACTIONS[0]) => {
+        setFaction(f.id);
+        const resolvedColor = resolveCSSColor(f.color);
+        document.documentElement.style.setProperty('--text-primary', resolvedColor);
+        document.documentElement.style.setProperty('--glow-primary', `0 0 5px ${resolvedColor}, 0 0 10px ${resolvedColor}, 0 0 20px ${resolvedColor}4D`);
+        SoundManager.playFactionSelect();
+    };
 
     const confirmFaction = (val: string) => {
         if (val.trim().toUpperCase() === 'Y' && faction) {
@@ -105,11 +113,13 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="crt-overlay flicker" style={{ height: '100vh', backgroundColor: 'black', padding: 32, overflowY: 'auto' }}>
+        <div style={{ height: '100vh', backgroundColor: 'black', padding: 32, overflowY: 'auto', position: 'relative' }}>
+            {/* Visual overlays — these are position:fixed with pointer-events:none in CSS, so they won't block clicks */}
+            <div className="crt-overlay flicker" />
             <div className="scanline" />
 
             {step === 1 && (
-                <div>
+                <div style={{ position: 'relative', zIndex: 1 }}>
                     <TypewriterText text="ARCHITECT REGISTRATION REQUIRED." speed={20} />
                     <div style={{ marginTop: 16 }}>
                         <CommandInput onSubmit={handleDesignationSubmit} />
@@ -118,11 +128,13 @@ export const Login: React.FC = () => {
             )}
 
             {step === 1.5 && (
-                <TypewriterText text={`DESIGNATION [${designation}] REGISTERED. PROCEED TO ALIGNMENT SCAN.`} speed={20} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                    <TypewriterText text={`DESIGNATION [${designation}] REGISTERED. PROCEED TO ALIGNMENT SCAN.`} speed={20} />
+                </div>
             )}
 
             {step === 2 && (
-                <div>
+                <div style={{ position: 'relative', zIndex: 1 }}>
                     <TypewriterText text="THREE FACTIONS SEEK YOUR ALLEGIANCE. CHOOSE YOUR ALIGNMENT:" speed={150} mode="word" />
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24, maxWidth: 600 }}>
@@ -157,7 +169,7 @@ export const Login: React.FC = () => {
             )}
 
             {step === 3 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative', zIndex: 1 }}>
                     {/* using multiple step values or just sequential setTimeout */}
                     <TypewriterText text="CALIBRATING NEURAL LINK..." speed={20} onComplete={() => { }} />
                     <TypewriterText text={`ASSIGNING SECTOR: S-${Math.floor(Math.random() * 50) + 1}`} speed={20} />

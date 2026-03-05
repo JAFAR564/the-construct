@@ -109,6 +109,7 @@ export interface User {
   equippedItems: Partial<Record<EquipmentSlot, string>>;
   abilities: Ability[];
   characterProfile: CharacterProfile;
+  avatarDataUrl?: string;
   level: number;
   xpToNextLevel: number;
   totalXP: number;

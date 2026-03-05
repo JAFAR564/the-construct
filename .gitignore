@@ -28,3 +28,4 @@ EOF
 *.njsproj
 *.sln
 *.sw?
+.vercel

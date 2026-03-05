@@ -104,7 +104,7 @@ export const useChatStore = create<ChatState>((set) => ({
                         content: welcomeContent,
                         timestamp: new Date().toISOString(),
                         reactions: {},
-                        isNPC: true,
+                        isNPC: false,
                         isPinned: false,
                     }]
                 };

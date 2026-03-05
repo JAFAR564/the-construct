@@ -2,87 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { useChatStore } from '@/stores/useChatStore';
 import { CombatArena, createCombatSession } from '@/components/ui/CombatArena';
-import type { ChannelMessage, Faction, Rank } from '@/types';
-
-// ── NPC PERSONAS ──
-
-interface NPCPersona {
-    designation: string;
-    faction: Faction;
-    rank: Rank;
-    personality: string;
-}
-
-const NPC_PERSONAS: NPCPersona[] = [
-    { designation: 'CIPHER_ZERO', faction: 'TECHNOCRATS', rank: 'WARDEN', personality: 'calculating, speaks in code metaphors' },
-    { designation: 'VEIL_WALKER', faction: 'KEEPERS_OF_THE_VEIL', rank: 'SENTINEL', personality: 'mystical, references ancient lore' },
-    { designation: 'IRON_HAND', faction: 'IRONBORN_COLLECTIVE', rank: 'COMMANDER', personality: 'blunt, aggressive, respects strength' },
-    { designation: 'GHOST_SIGNAL', faction: 'TECHNOCRATS', rank: 'SPECIALIST', personality: 'paranoid, conspiracy theories about the Grid' },
-    { designation: 'EMBER_WITCH', faction: 'KEEPERS_OF_THE_VEIL', rank: 'OPERATIVE', personality: 'playful, uses fire metaphors' },
-    { designation: 'RUST_PROPHET', faction: 'IRONBORN_COLLECTIVE', rank: 'SENTINEL', personality: 'philosophical, fatalistic, quotes scripture' },
-    { designation: 'NULL_BYTE', faction: 'TECHNOCRATS', rank: 'OPERATIVE', personality: 'sarcastic, hacker humor, trollish' },
-    { designation: 'SHADOW_LOOM', faction: 'KEEPERS_OF_THE_VEIL', rank: 'WARDEN', personality: 'ominous, speaks in riddles' },
-];
-
-// Pre-written NPC responses keyed by personality trait
-const NPC_RESPONSES: Record<string, string[]> = {
-    CIPHER_ZERO: [
-        'Every message is a packet. Every packet has a payload. What is yours?',
-        'I traced the anomaly to Sector S-14. The data is... corrupted beyond recovery.',
-        'The Grid remembers everything. Even the things you delete.',
-        'Running diagnostics. Results inconclusive. As expected.',
-        'You think in language. I think in binary. Neither of us sees the whole picture.',
-    ],
-    VEIL_WALKER: [
-        'The ancient scripts speak of this moment. The convergence draws near.',
-        'I walked between the veils last night. Something watched me from the other side.',
-        'The runes do not lie. But they do not always tell the whole truth.',
-        'In the old tongue, your name would mean "seeker." Fitting, perhaps.',
-        'The Veil thins in Sector S-12. I can feel the old magic bleeding through.',
-    ],
-    IRON_HAND: [
-        'Talk is cheap. Show me what your fists can do in the Arena.',
-        'I crushed three opponents yesterday. My forge grows stronger.',
-        'The Ironborn do not negotiate. We build. We conquer. We endure.',
-        'Your faction speaks of subtlety. I speak of hammers. Guess which wins.',
-        'Respect is earned in blood and iron, not words and whispers.',
-    ],
-    GHOST_SIGNAL: [
-        'Has anyone else noticed the signal spikes in Sector S-07? Something is watching us.',
-        'They say the Grid is just code. But code does not dream. The Grid dreams.',
-        'I intercepted a transmission last cycle. It was in a language that does not exist yet.',
-        'Trust no one. Especially the ones who tell you to trust them.',
-        'My sensors are picking up ghost signals. Transmissions from nowhere to nowhere.',
-    ],
-    EMBER_WITCH: [
-        'Careful, darling. Play with fire and you might get... well, you know. 🔥',
-        'I lit a candle for the fallen last night. The flame turned green. Strange.',
-        'The warmth of a good spell is better than any forge. No offense, Ironborn.',
-        'They call me a witch like it is an insult. I call it a compliment.',
-        'Anyone want to see a trick? I can make your doubts disappear. Along with your eyebrows.',
-    ],
-    RUST_PROPHET: [
-        'All metal returns to rust. All code returns to entropy. Such is the way.',
-        '"In the age of iron, the patient hand shapes the world." — Book of the Forge, verse 7.',
-        'I have seen the end, and it is magnificent. Do not fear the unmaking.',
-        'We build monuments to impermanence. There is beauty in that contradiction.',
-        'The Grid will fall. Something better will rise. This is not despair. This is prophecy.',
-    ],
-    NULL_BYTE: [
-        'lmao imagine not having root access in 2026',
-        'I tried to hack S-00 once. Got rickrolled by the system admin. Respect.',
-        'Anyone else just here for the memes? No? Just me? Cool cool cool.',
-        'Hot take: the Keepers are just LARPers with admin privileges.',
-        'I wrote a script that auto-generates conspiracy theories. Ghost Signal keeps quoting it.',
-    ],
-    SHADOW_LOOM: [
-        'Three threads converge. One gold, one crimson, one void. Only one survives.',
-        'I speak in riddles because the truth is too sharp for naked words.',
-        'What walks on no legs but travels every sector? A rumor.',
-        'The loom weaves. The pattern forms. You are a thread. Do not break.',
-        'Darkness is not the absence of light. It is the presence of everything else.',
-    ],
-};
+import type { ChannelMessage } from '@/types';
 
 const CHANNEL_ICONS: Record<string, string> = {
     general: '💬',
@@ -120,7 +40,6 @@ export const FactionHub: React.FC = () => {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 600);
     const feedRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const npcTimerRef = useRef<number | undefined>(undefined);
 
     // Responsive: auto-collapse sidebar on mobile
     useEffect(() => {
@@ -154,29 +73,6 @@ export const FactionHub: React.FC = () => {
 
     const activeChannel = channels.find(ch => ch.id === activeChannelId);
 
-    const generateNPCResponse = (channelId: string) => {
-        // Pick a random NPC
-        const npc = NPC_PERSONAS[Math.floor(Math.random() * NPC_PERSONAS.length)];
-        const responses = NPC_RESPONSES[npc.designation] || [];
-        const content = responses[Math.floor(Math.random() * responses.length)] || 'The Grid hums with static...';
-
-        const npcMessage: ChannelMessage = {
-            id: crypto.randomUUID(),
-            channelId,
-            userId: `npc_${npc.designation}`,
-            designation: npc.designation,
-            faction: npc.faction,
-            rank: npc.rank,
-            content,
-            timestamp: new Date().toISOString(),
-            reactions: {},
-            isNPC: true,
-            isPinned: false,
-        };
-
-        addChannelMessage(channelId, npcMessage);
-    };
-
     const handleSend = () => {
         if (!input.trim() || !activeChannel) return;
 
@@ -203,12 +99,6 @@ export const FactionHub: React.FC = () => {
 
         addChannelMessage(activeChannel.id, message);
         setInput('');
-
-        // Trigger NPC response after random delay (2-8 seconds)
-        if (npcTimerRef.current) clearTimeout(npcTimerRef.current);
-        npcTimerRef.current = window.setTimeout(() => {
-            generateNPCResponse(activeChannel.id);
-        }, 2000 + Math.random() * 6000);
     };
 
     const handleSlashCommand = (cmd: string) => {
@@ -225,25 +115,19 @@ export const FactionHub: React.FC = () => {
                     systemContent = '⚠️ Usage: /challenge [designation]';
                     break;
                 }
-                // Find the NPC
-                const targetNPC = NPC_PERSONAS.find(n => n.designation.toLowerCase() === args.toLowerCase());
-                if (!targetNPC) {
-                    systemContent = `⚠️ Unknown opponent: ${args}. Available: ${NPC_PERSONAS.map(n => n.designation).join(', ')}`;
-                    break;
-                }
                 // Only start combat in combat channels
                 if (activeChannel.type !== 'combat') {
                     systemContent = '⚠️ Combat can only be initiated in the COMBAT ARENA channel.';
                     break;
                 }
-                // Create combat session
+                // Create combat session against target designation
                 const session = createCombatSession(
                     activeChannel.id,
                     { userId: user.id, designation: user.designation, faction: user.faction },
-                    { userId: `npc_${targetNPC.designation}`, designation: targetNPC.designation, faction: targetNPC.faction },
+                    { userId: `opponent_${args.toUpperCase()}`, designation: args.toUpperCase(), faction: user.faction },
                 );
                 startCombat(activeChannel.id, session);
-                systemContent = `⚔️ COMBAT INITIATED! ${user.designation} vs ${targetNPC.designation}. Environment: ${session.environment}. Describe your first action!`;
+                systemContent = `⚔️ COMBAT INITIATED! ${user.designation} vs ${args.toUpperCase()}. Environment: ${session.environment}. Describe your first action!`;
                 break;
             }
             case '/attack':
@@ -280,18 +164,10 @@ export const FactionHub: React.FC = () => {
             content: systemContent,
             timestamp: new Date().toISOString(),
             reactions: {},
-            isNPC: true,
+            isNPC: false,
             isPinned: false,
         };
         addChannelMessage(activeChannel.id, sysMsg);
-
-        // NPC reaction to combat commands
-        if (['/challenge', '/attack', '/defend'].includes(command) && args) {
-            if (npcTimerRef.current) clearTimeout(npcTimerRef.current);
-            npcTimerRef.current = window.setTimeout(() => {
-                generateNPCResponse(activeChannel.id);
-            }, 1500 + Math.random() * 3000);
-        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -473,7 +349,7 @@ export const FactionHub: React.FC = () => {
                                         value={input}
                                         onChange={e => setInput(e.target.value)}
                                         onKeyDown={handleKeyDown}
-                                        placeholder={activeChannel.type === 'combat' ? '/challenge CIPHER_ZERO' : 'Transmit...'}
+                                        placeholder={activeChannel.type === 'combat' ? '/challenge OPPONENT' : 'Transmit...'}
                                         style={{
                                             flex: 1, backgroundColor: 'transparent', border: 'none',
                                             color: 'var(--text-primary)', fontFamily: 'var(--font-mono)',
@@ -558,12 +434,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMessage, on
                 <span style={{ color: factionColor, fontWeight: 'bold', fontSize: '12px' }}>
                     [{message.designation}]
                 </span>
-                {message.isNPC && (
-                    <span style={{
-                        fontSize: '9px', color: 'var(--accent-warning)',
-                        border: '1px solid var(--accent-warning)', padding: '0 4px',
-                    }}>NPC</span>
-                )}
                 <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
                     {message.rank}
                 </span>
@@ -574,9 +444,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMessage, on
 
             {/* Content */}
             <div style={{
-                color: message.isNPC ? 'var(--text-secondary)' : 'var(--text-primary)',
+                color: 'var(--text-primary)',
                 fontSize: '12px', lineHeight: 1.5,
-                fontStyle: message.isNPC ? 'italic' : 'normal',
             }}>
                 {message.content}
             </div>

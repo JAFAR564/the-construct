@@ -28,8 +28,7 @@ export function useTypewriter(
         if (wordIndex < words.length) {
           setDisplayedText(prev => prev + words[wordIndex]);
           wordIndex++;
-        }
-        if (wordIndex >= words.length) {
+        } else {
           if (timerRef.current) clearInterval(timerRef.current);
           setIsComplete(true);
           onComplete?.();

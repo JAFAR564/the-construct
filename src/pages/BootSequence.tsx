@@ -62,10 +62,12 @@ export const BootSequence: React.FC = () => {
     return (
         <div
             onClick={user ? skipBoot : undefined}
-            style={{ height: '100vh', width: '100vw', backgroundColor: 'black', color: 'var(--text-primary)', padding: 32, fontFamily: 'var(--font-mono)' }}
-            className="crt-overlay flicker"
+            style={{ height: '100vh', width: '100vw', backgroundColor: 'black', color: 'var(--text-primary)', padding: 32, fontFamily: 'var(--font-mono)', position: 'relative' }}
         >
+            {/* Visual overlays — separate from content so they don't block interactions */}
+            <div className="crt-overlay flicker" />
             <div className="scanline" />
+
             {step >= 1 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="CONSTRUCT OS v3.0.1" speed={20} /></div>}
             {!user ? (
                 <>
