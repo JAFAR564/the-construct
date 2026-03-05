@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { TerminalCard } from '@/components/ui/TerminalCard';
 import * as localDB from '@/services/localDB';
+import { isSupabaseConfigured } from '@/services/supabase';
+import * as auth from '@/services/auth';
 
 export const Settings: React.FC = () => {
     const { user, updateUser } = useGameStore();
@@ -31,9 +33,16 @@ export const Settings: React.FC = () => {
 
     const handleClear = async () => {
         if (window.confirm('WARNING: ALL PROGRESS WILL BE LOST. CONFIRM? [Y/N]')) {
+            await auth.signOut();
             await localDB.clearAll();
             window.location.href = '/';
         }
+    };
+
+    const handleSignOut = async () => {
+        await auth.signOut();
+        await localDB.clearAll();
+        window.location.href = '/';
     };
 
     const handleExport = async () => {
@@ -166,6 +175,12 @@ export const Settings: React.FC = () => {
                     <button onClick={handleClear} style={{ padding: '8px 16px', backgroundColor: 'transparent', border: '1px solid var(--accent-danger)', color: 'var(--accent-danger)', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
                         CLEAR LOCAL DATA
                     </button>
+
+                    {isSupabaseConfigured && (
+                        <button onClick={handleSignOut} style={{ padding: '8px 16px', backgroundColor: 'transparent', border: '1px solid var(--accent-warning, #FFA500)', color: 'var(--accent-warning, #FFA500)', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+                            SIGN OUT
+                        </button>
+                    )}
                 </div>
 
                 <div style={{ marginTop: 32, fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>

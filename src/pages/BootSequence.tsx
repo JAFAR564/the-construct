@@ -2,26 +2,60 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '@/stores/useGameStore';
 import { useUIStore } from '@/stores/useUIStore';
+import { isSupabaseConfigured } from '@/services/supabase';
+import * as auth from '@/services/auth';
+import * as db from '@/services/supabaseDB';
 import { SoundManager } from '@/utils/soundManager';
 import { TypewriterText } from '@/components/ui/TypewriterText';
 
 export const BootSequence: React.FC = () => {
     const navigate = useNavigate();
     const user = useGameStore(state => state.user);
+    const setUser = useGameStore(state => state.setUser);
     const { setBootComplete, bootSkipped, setBootSkipped } = useUIStore();
 
     const [step, setStep] = useState(0);
     const [progress, setProgress] = useState(0);
+    const [checkedAuth, setCheckedAuth] = useState(false);
+    const [hasSession, setHasSession] = useState(false);
 
+    // Check for existing auth session on mount
     useEffect(() => {
+        const checkAuth = async () => {
+            if (isSupabaseConfigured) {
+                try {
+                    const authUser = await auth.getAuthUser();
+                    if (authUser) {
+                        const dbUser = await db.getUser(authUser.id);
+                        if (dbUser) {
+                            setUser(dbUser);
+                            setHasSession(true);
+                        }
+                    }
+                } catch {
+                    // Supabase unavailable — continue with local flow
+                }
+            }
+            setCheckedAuth(true);
+        };
+        checkAuth();
+    }, [setUser]);
+
+    // Run the boot animation after auth check completes
+    useEffect(() => {
+        if (!checkedAuth) return;
+
+        const currentUser = hasSession ? useGameStore.getState().user : user;
+
         if (bootSkipped) {
-            finishBoot();
+            finishBoot(currentUser);
             return;
         }
 
         SoundManager.playBoot();
 
-        if (!user) {
+        if (!currentUser) {
+            // New user — full boot sequence
             setTimeout(() => setStep(1), 500);
             setTimeout(() => setStep(2), 1500);
             setTimeout(() => setStep(3), 2500);
@@ -38,38 +72,41 @@ export const BootSequence: React.FC = () => {
                 }, 100);
             }, 6500);
             setTimeout(() => setStep(8), 10500);
-            setTimeout(() => finishBoot(), 11500);
+            setTimeout(() => finishBoot(null), 11500);
         } else {
+            // Returning user — short boot
             setTimeout(() => setStep(1), 500);
             setTimeout(() => setStep(2), 1200);
             setTimeout(() => setStep(3), 1900);
-            setTimeout(() => finishBoot(), 2600);
+            setTimeout(() => finishBoot(currentUser), 2600);
         }
-    }, [user, bootSkipped]);
+    }, [checkedAuth, bootSkipped, hasSession]);
 
-    const finishBoot = async () => {
+    const finishBoot = async (currentUser: ReturnType<typeof useGameStore.getState>['user']) => {
         setBootComplete(true);
-        // Fire-and-forget connection test — don't block navigation
+        // Fire-and-forget connection test
         useGameStore.getState().testConnection().catch(() => { });
-        navigate(user ? '/terminal' : '/login');
+        navigate(currentUser ? '/terminal' : '/login');
     };
 
     const skipBoot = () => {
         setBootSkipped(true);
-        finishBoot();
+        const currentUser = hasSession ? useGameStore.getState().user : user;
+        finishBoot(currentUser);
     };
+
+    const displayUser = hasSession ? useGameStore.getState().user : user;
 
     return (
         <div
-            onClick={user ? skipBoot : undefined}
+            onClick={displayUser ? skipBoot : undefined}
             style={{ height: '100vh', width: '100vw', backgroundColor: 'black', color: 'var(--text-primary)', padding: 32, fontFamily: 'var(--font-mono)', position: 'relative' }}
         >
-            {/* Visual overlays — separate from content so they don't block interactions */}
             <div className="crt-overlay flicker" />
             <div className="scanline" />
 
             {step >= 1 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="CONSTRUCT OS v3.0.1" speed={20} /></div>}
-            {!user ? (
+            {!displayUser ? (
                 <>
                     {step >= 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="INITIALIZING KERNEL..." speed={20} /></div>}
                     {step >= 3 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="LOADING MEMORY BANKS... [OK]" speed={20} /></div>}
@@ -89,7 +126,7 @@ export const BootSequence: React.FC = () => {
                 </>
             ) : (
                 <>
-                    {step >= 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text={`ARCHITECT ${user.designation} RECOGNIZED.`} speed={20} /></div>}
+                    {step >= 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text={`ARCHITECT ${displayUser.designation} RECOGNIZED.`} speed={20} /></div>}
                     {step >= 3 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="RESUMING SESSION..." speed={20} /></div>}
                     <div style={{ position: 'absolute', bottom: 32, right: 32, color: 'var(--text-muted)' }}>(tap to skip)</div>
                 </>
