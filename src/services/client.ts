@@ -1,5 +1,6 @@
 import type { User, ChatMessage, Choice, StatChange, Quest, LeaderboardEntry, FactionStatus, Faction } from '@/types';
 import { getFallbackResponse } from '@/services/fallbackContent';
+import { supabase, isSupabaseConfigured } from '@/services/supabase';
 
 interface APIRequest {
     action: 'CHAT' | 'SYNC_USER' | 'GET_LEADERBOARD' | 'GET_FACTION_STATUS' | 'GET_DAILY_QUESTS';
@@ -36,8 +37,10 @@ export class ApiClient {
         this.endpoint = import.meta.env.VITE_API_ENDPOINT || '';
         this.isConfigured = this.endpoint.length > 0 && this.endpoint !== 'undefined';
 
-        if (this.isConfigured) {
-            console.log('[CONSTRUCT OS] Grid link established:', this.endpoint.slice(0, 50) + '...');
+        if (isSupabaseConfigured) {
+            console.log('[CONSTRUCT OS] Supabase edge function link established.');
+        } else if (this.isConfigured) {
+            console.log('[CONSTRUCT OS] GAS grid link established:', this.endpoint.slice(0, 50) + '...');
         } else {
             console.log('[CONSTRUCT OS] Grid link unavailable. Operating in offline mode.');
         }
@@ -102,6 +105,10 @@ export class ApiClient {
     }
 
     async chat(message: string, context: ChatMessage[], userStats: Partial<User>): Promise<APIResponse> {
+        // Priority: Supabase Edge Function > GAS endpoint > offline
+        if (isSupabaseConfigured) {
+            return this.chatViaEdgeFunction(message, context, userStats);
+        }
         if (!this.isConfigured) {
             return this.getOfflineResponse();
         }
@@ -110,6 +117,48 @@ export class ApiClient {
             userId: userStats.id || '',
             payload: { message, context, userStats }
         });
+    }
+
+    private async chatViaEdgeFunction(message: string, context: ChatMessage[], userStats: Partial<User>): Promise<APIResponse> {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                console.warn('[ApiClient] No auth session for edge function call');
+                return this.getOfflineResponse();
+            }
+
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+            const response = await fetch(`${supabaseUrl}/functions/v1/ai-chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    message,
+                    context: context.slice(-5).map(m => ({ source: m.source, content: m.content })),
+                    userStats: {
+                        designation: userStats.designation,
+                        faction: userStats.faction,
+                        rank: userStats.rank,
+                        currentSector: userStats.currentSector,
+                        xp: userStats.xp,
+                        skills: userStats.skills,
+                    },
+                }),
+            });
+
+            if (!response.ok) {
+                console.error(`[ApiClient] Edge function HTTP ${response.status}`);
+                return this.getOfflineResponse();
+            }
+
+            const data = await response.json();
+            return data as APIResponse;
+        } catch (err) {
+            console.error('[ApiClient] Edge function error:', err);
+            return this.getOfflineResponse();
+        }
     }
 
     async syncUser(user: User): Promise<APIResponse> {
