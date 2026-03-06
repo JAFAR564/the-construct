@@ -102,42 +102,45 @@ export const BootSequence: React.FC = () => {
     return (
         <div
             onClick={displayUser ? skipBoot : undefined}
-            style={{ height: '100vh', width: '100vw', backgroundColor: 'black', color: 'var(--text-primary)', padding: 32, fontFamily: 'var(--font-mono)', position: 'relative' }}
+            style={{ minHeight: '100vh', width: '100vw', backgroundColor: 'black', color: 'var(--text-primary)', padding: 32, fontFamily: 'var(--font-mono)', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
         >
             <div className="crt-overlay flicker" />
             <div className="scanline" />
 
-            {step >= 1 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="CONSTRUCT OS v3.0.1" speed={20} /></div>}
-            {!displayUser ? (
-                <>
-                    {step >= 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="INITIALIZING KERNEL..." speed={20} /></div>}
-                    {step >= 3 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="LOADING MEMORY BANKS... [OK]" speed={20} /></div>}
-                    {step >= 4 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="SCANNING NEURAL INTERFACE... [OK]" speed={20} /></div>}
-                    {step >= 5 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="DETECTING ARCHITECT SIGNAL... [NEW SIGNAL DETECTED]" speed={20} /></div>}
-                    {step >= 6 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="ESTABLISHING SECURE CHANNEL..." speed={20} /></div>}
+            <div style={{ width: '100%', maxWidth: 600 }}>
 
-                    {step >= 7 && (
-                        <div style={{ marginTop: 32, width: '100%', maxWidth: 600 }}>
-                            <div style={{ display: 'flex', border: '1px solid var(--text-primary)', height: 20 }}>
-                                <div style={{ width: `${progress}%`, backgroundColor: 'var(--text-primary)', transition: 'width 0.1s linear' }} />
+                {step >= 1 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="CONSTRUCT OS v3.0.1" speed={20} /></div>}
+                {!displayUser ? (
+                    <>
+                        {step >= 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="INITIALIZING KERNEL..." speed={20} /></div>}
+                        {step >= 3 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="LOADING MEMORY BANKS... [OK]" speed={20} /></div>}
+                        {step >= 4 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="SCANNING NEURAL INTERFACE... [OK]" speed={20} /></div>}
+                        {step >= 5 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="DETECTING ARCHITECT SIGNAL... [NEW SIGNAL DETECTED]" speed={20} /></div>}
+                        {step >= 6 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="ESTABLISHING SECURE CHANNEL..." speed={20} /></div>}
+
+                        {step >= 7 && (
+                            <div style={{ marginTop: 32, width: '100%', maxWidth: 600 }}>
+                                <div style={{ display: 'flex', border: '1px solid var(--text-primary)', height: 20 }}>
+                                    <div style={{ width: `${progress}%`, backgroundColor: 'var(--text-primary)', transition: 'width 0.1s linear' }} />
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {step >= 8 && <div style={{ display: 'block', marginTop: 16 }}><TypewriterText text="WELCOME, ARCHITECT. PREPARE FOR ORIENTATION." speed={30} /></div>}
-                </>
-            ) : (
-                <>
-                    {step >= 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text={`ARCHITECT ${displayUser.designation} RECOGNIZED.`} speed={20} /></div>}
-                    {step >= 3 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="RESUMING SESSION..." speed={20} /></div>}
-                    {step >= 3 && showSustainLine && (
-                        <div style={{ display: 'block', marginBottom: 8, color: 'var(--text-muted)' }}>
-                            <TypewriterText text="GRID SUSTAINABILITY: COMMUNITY-FUNDED ⚡" speed={20} />
-                        </div>
-                    )}
-                    <div style={{ position: 'absolute', bottom: 32, right: 32, color: 'var(--text-muted)' }}>(tap to skip)</div>
-                </>
-            )}
+                        {step >= 8 && <div style={{ display: 'block', marginTop: 16 }}><TypewriterText text="WELCOME, ARCHITECT. PREPARE FOR ORIENTATION." speed={30} /></div>}
+                    </>
+                ) : (
+                    <>
+                        {step >= 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text={`ARCHITECT ${displayUser.designation} RECOGNIZED.`} speed={20} /></div>}
+                        {step >= 3 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="RESUMING SESSION..." speed={20} /></div>}
+                        {step >= 3 && showSustainLine && (
+                            <div style={{ display: 'block', marginBottom: 8, color: 'var(--text-muted)' }}>
+                                <TypewriterText text="GRID SUSTAINABILITY: COMMUNITY-FUNDED ⚡" speed={20} />
+                            </div>
+                        )}
+                        <div style={{ position: 'absolute', bottom: 32, right: 32, color: 'var(--text-muted)' }}>(tap to skip)</div>
+                    </>
+                )}
+            </div>
         </div>
     );
 };

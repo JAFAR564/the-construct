@@ -235,151 +235,154 @@ export const Login: React.FC = () => {
     // ── RENDER ──
 
     return (
-        <div style={{ height: '100vh', backgroundColor: 'black', padding: 32, overflowY: 'auto', position: 'relative' }}>
+        <div style={{ minHeight: '100vh', backgroundColor: 'black', padding: 32, overflowY: 'auto', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <div className="crt-overlay flicker" />
             <div className="scanline" />
 
-            {/* ── AUTH STEP ── */}
-            {step === 'auth' && (
-                <div style={{ position: 'relative', zIndex: 1, maxWidth: 500 }}>
-                    <TypewriterText
-                        text={mode === 'signup'
-                            ? 'CONSTRUCT OS — NEW ARCHITECT ENROLLMENT'
-                            : 'CONSTRUCT OS — ARCHITECT AUTHENTICATION'}
-                        speed={20}
-                    />
+            <div style={{ width: '100%', maxWidth: 480 }}>
 
-                    <form onSubmit={handleAuthSubmit} style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        <div>
-                            <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: 4 }}>GRID_ID (EMAIL)</div>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                placeholder="architect@thegrid.net"
-                                style={inputStyle}
-                                autoFocus
-                                autoComplete="email"
-                            />
-                        </div>
-                        <div>
-                            <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: 4 }}>ACCESS_KEY (PASSWORD)</div>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                style={inputStyle}
-                                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                            />
-                        </div>
-
-                        {authError && (
-                            <div style={{ color: '#FF4444', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
-                                ⚠ ERROR: {authError}
-                            </div>
-                        )}
-
-                        <button type="submit" style={buttonStyle}>
-                            {mode === 'signup' ? '[ ENROLL ]' : '[ AUTHENTICATE ]'}
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setAuthError(''); }}
-                            style={mutedLinkStyle}
-                        >
-                            {mode === 'signup'
-                                ? '> Already registered? Authenticate here.'
-                                : '> New Architect? Enroll here.'}
-                        </button>
-                    </form>
-                </div>
-            )}
-
-            {step === 'auth_loading' && (
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                    <TypewriterText text="VERIFYING CREDENTIALS AGAINST GRID DATABASE..." speed={20} />
-                </div>
-            )}
-
-            {/* ── DESIGNATION STEP ── */}
-            {step === 'designation' && (
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                    <TypewriterText text="ARCHITECT REGISTRATION REQUIRED." speed={20} />
-                    <div style={{ marginTop: 16 }}>
-                        <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: 4 }}>ENTER DESIGNATION (3-20 chars, alphanumeric + underscore):</div>
-                        <input
-                            type="text"
-                            onKeyDown={e => { if (e.key === 'Enter') handleDesignationSubmit((e.target as HTMLInputElement).value); }}
-                            style={inputStyle}
-                            autoFocus
-                            autoComplete="off"
-                            spellCheck={false}
+                {/* ── AUTH STEP ── */}
+                {step === 'auth' && (
+                    <div style={{ position: 'relative', zIndex: 1, maxWidth: 500 }}>
+                        <TypewriterText
+                            text={mode === 'signup'
+                                ? 'CONSTRUCT OS — NEW ARCHITECT ENROLLMENT'
+                                : 'CONSTRUCT OS — ARCHITECT AUTHENTICATION'}
+                            speed={20}
                         />
-                    </div>
-                </div>
-            )}
 
-            {step === 'designation_transition' && (
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                    <TypewriterText text={`DESIGNATION [${designation}] REGISTERED. PROCEED TO ALIGNMENT SCAN.`} speed={20} />
-                </div>
-            )}
-
-            {/* ── FACTION STEP ── */}
-            {step === 'faction' && (
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                    <TypewriterText text="THREE FACTIONS SEEK YOUR ALLEGIANCE. CHOOSE YOUR ALIGNMENT:" speed={150} mode="word" />
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24, maxWidth: 600 }}>
-                        {FACTIONS.map((f, i) => (
-                            <div
-                                key={f.id}
-                                onClick={() => handleFactionSelect(f)}
-                                style={{
-                                    border: `1px solid ${f.color}`,
-                                    padding: 16,
-                                    cursor: 'pointer',
-                                    backgroundColor: faction === f.id ? `${f.color}33` : 'transparent'
-                                }}
-                            >
-                                <div style={{ color: f.color, fontSize: '1.2rem', marginBottom: 8, fontFamily: 'var(--font-display)' }}>
-                                    [{i + 1}] {f.name}
-                                </div>
-                                <div style={{ color: 'var(--text-muted)' }}>{f.description}</div>
-                                <div style={{ fontStyle: 'italic', margin: '8px 0' }}>{f.motto}</div>
-                                <div style={{ fontSize: '0.9rem' }}>SKILL FOCUS: {f.skills.join(', ')}</div>
+                        <form onSubmit={handleAuthSubmit} style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            <div>
+                                <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: 4 }}>GRID_ID (EMAIL)</div>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    placeholder="architect@thegrid.net"
+                                    style={inputStyle}
+                                    autoFocus
+                                    autoComplete="email"
+                                />
                             </div>
-                        ))}
-                    </div>
+                            <div>
+                                <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: 4 }}>ACCESS_KEY (PASSWORD)</div>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    style={inputStyle}
+                                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                                />
+                            </div>
 
-                    {faction && (
-                        <div style={{ marginTop: 24 }}>
-                            <TypewriterText text={`ALIGNMENT: ${faction}. CONFIRM? [Y/N]`} speed={20} />
+                            {authError && (
+                                <div style={{ color: '#FF4444', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+                                    ⚠ ERROR: {authError}
+                                </div>
+                            )}
+
+                            <button type="submit" style={buttonStyle}>
+                                {mode === 'signup' ? '[ ENROLL ]' : '[ AUTHENTICATE ]'}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setAuthError(''); }}
+                                style={mutedLinkStyle}
+                            >
+                                {mode === 'signup'
+                                    ? '> Already registered? Authenticate here.'
+                                    : '> New Architect? Enroll here.'}
+                            </button>
+                        </form>
+                    </div>
+                )}
+
+                {step === 'auth_loading' && (
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <TypewriterText text="VERIFYING CREDENTIALS AGAINST GRID DATABASE..." speed={20} />
+                    </div>
+                )}
+
+                {/* ── DESIGNATION STEP ── */}
+                {step === 'designation' && (
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <TypewriterText text="ARCHITECT REGISTRATION REQUIRED." speed={20} />
+                        <div style={{ marginTop: 16 }}>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: 4 }}>ENTER DESIGNATION (3-20 chars, alphanumeric + underscore):</div>
                             <input
                                 type="text"
-                                onKeyDown={e => { if (e.key === 'Enter') confirmFaction((e.target as HTMLInputElement).value); }}
-                                style={{ ...inputStyle, marginTop: 8 }}
+                                onKeyDown={e => { if (e.key === 'Enter') handleDesignationSubmit((e.target as HTMLInputElement).value); }}
+                                style={inputStyle}
                                 autoFocus
                                 autoComplete="off"
+                                spellCheck={false}
                             />
                         </div>
-                    )}
-                </div>
-            )}
+                    </div>
+                )}
 
-            {/* ── INITIALIZING STEP ── */}
-            {step === 'initializing' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative', zIndex: 1 }}>
-                    <TypewriterText text="CALIBRATING NEURAL LINK..." speed={20} onComplete={() => { }} />
-                    <TypewriterText text={`ASSIGNING SECTOR: S-${Math.floor(Math.random() * 50) + 1}`} speed={20} />
-                    <TypewriterText text="RANK: INITIATE" speed={20} />
-                    <TypewriterText text="CLEARANCE: LEVEL 1" speed={20} />
-                    <TypewriterText text="INITIALIZATION COMPLETE." speed={20} />
-                    <TypewriterText text="REDIRECTING TO MAIN TERMINAL..." speed={20} />
-                </div>
-            )}
+                {step === 'designation_transition' && (
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <TypewriterText text={`DESIGNATION [${designation}] REGISTERED. PROCEED TO ALIGNMENT SCAN.`} speed={20} />
+                    </div>
+                )}
+
+                {/* ── FACTION STEP ── */}
+                {step === 'faction' && (
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <TypewriterText text="THREE FACTIONS SEEK YOUR ALLEGIANCE. CHOOSE YOUR ALIGNMENT:" speed={150} mode="word" />
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24, maxWidth: 600 }}>
+                            {FACTIONS.map((f, i) => (
+                                <div
+                                    key={f.id}
+                                    onClick={() => handleFactionSelect(f)}
+                                    style={{
+                                        border: `1px solid ${f.color}`,
+                                        padding: 16,
+                                        cursor: 'pointer',
+                                        backgroundColor: faction === f.id ? `${f.color}33` : 'transparent'
+                                    }}
+                                >
+                                    <div style={{ color: f.color, fontSize: '1.2rem', marginBottom: 8, fontFamily: 'var(--font-display)' }}>
+                                        [{i + 1}] {f.name}
+                                    </div>
+                                    <div style={{ color: 'var(--text-muted)' }}>{f.description}</div>
+                                    <div style={{ fontStyle: 'italic', margin: '8px 0' }}>{f.motto}</div>
+                                    <div style={{ fontSize: '0.9rem' }}>SKILL FOCUS: {f.skills.join(', ')}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {faction && (
+                            <div style={{ marginTop: 24 }}>
+                                <TypewriterText text={`ALIGNMENT: ${faction}. CONFIRM? [Y/N]`} speed={20} />
+                                <input
+                                    type="text"
+                                    onKeyDown={e => { if (e.key === 'Enter') confirmFaction((e.target as HTMLInputElement).value); }}
+                                    style={{ ...inputStyle, marginTop: 8 }}
+                                    autoFocus
+                                    autoComplete="off"
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ── INITIALIZING STEP ── */}
+                {step === 'initializing' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative', zIndex: 1 }}>
+                        <TypewriterText text="CALIBRATING NEURAL LINK..." speed={20} onComplete={() => { }} />
+                        <TypewriterText text={`ASSIGNING SECTOR: S-${Math.floor(Math.random() * 50) + 1}`} speed={20} />
+                        <TypewriterText text="RANK: INITIATE" speed={20} />
+                        <TypewriterText text="CLEARANCE: LEVEL 1" speed={20} />
+                        <TypewriterText text="INITIALIZATION COMPLETE." speed={20} />
+                        <TypewriterText text="REDIRECTING TO MAIN TERMINAL..." speed={20} />
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
