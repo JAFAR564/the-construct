@@ -25,9 +25,9 @@ export function useTypewriter(
       let wordIndex = 0;
 
       timerRef.current = window.setInterval(() => {
-        if (wordIndex < words.length) {
-          setDisplayedText(prev => prev + words[wordIndex]);
-          wordIndex++;
+        wordIndex++;
+        if (wordIndex <= words.length) {
+          setDisplayedText(words.slice(0, wordIndex).join(''));
         } else {
           if (timerRef.current) clearInterval(timerRef.current);
           setIsComplete(true);
@@ -37,9 +37,11 @@ export function useTypewriter(
     } else {
       let i = 0;
       timerRef.current = window.setInterval(() => {
-        setDisplayedText(prev => prev + text.charAt(i));
         i++;
-        if (i === text.length) {
+        if (i <= text.length) {
+          setDisplayedText(text.slice(0, i));
+        }
+        if (i >= text.length) {
           if (timerRef.current) clearInterval(timerRef.current);
           setIsComplete(true);
           onComplete?.();
