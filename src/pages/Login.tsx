@@ -25,6 +25,7 @@ type LoginStep = 'auth' | 'auth_loading' | 'designation' | 'designation_transiti
 export const Login: React.FC = () => {
     const navigate = useNavigate();
     const setUser = useGameStore(state => state.setUser);
+    const setAuthId = useGameStore(state => state.setAuthId);
 
     // If Supabase isn't configured, skip auth step entirely
     const [step, setStep] = useState<LoginStep>(isSupabaseConfigured ? 'auth' : 'designation');
@@ -51,6 +52,7 @@ export const Login: React.FC = () => {
                 if (existingUser) {
                     // Returning user — load profile and go straight to terminal
                     setUser(existingUser);
+                    setAuthId(authUser.id);
                     navigate('/terminal');
                 } else {
                     // Authenticated but no game profile — need registration
@@ -92,6 +94,7 @@ export const Login: React.FC = () => {
             const existingUser = await db.getUser(authUser.id);
             if (existingUser) {
                 setUser(existingUser);
+                setAuthId(authUser.id);
                 navigate('/terminal');
                 return;
             }
@@ -189,6 +192,7 @@ export const Login: React.FC = () => {
         // Save to Supabase if authenticated
         if (authUserId && isSupabaseConfigured) {
             await db.saveUser(newUser, authUserId);
+            setAuthId(authUserId);
         }
 
         setUser(newUser);

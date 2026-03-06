@@ -11,12 +11,14 @@ import { SoundManager } from '@/utils/soundManager';
 
 export interface GameState {
     user: User | null;
+    authId: string | null;
     messages: ChatMessage[];
     quests: Quest[];
     isLoading: boolean;
     error: string | null;
 
     setUser: (user: User) => void;
+    setAuthId: (authId: string) => void;
     updateUser: (partial: Partial<User>) => void;
     addMessage: (message: ChatMessage) => void;
     setMessages: (messages: ChatMessage[]) => void;
@@ -37,12 +39,14 @@ const api = new ApiClient();
 
 export const useGameStore = create<GameState>((set, get) => ({
     user: null,
+    authId: null,
     messages: [],
     quests: [],
     isLoading: false,
     error: null,
 
     setUser: (user) => set({ user }),
+    setAuthId: (authId) => set({ authId }),
     updateUser: (partial) => set((state) => ({ user: state.user ? { ...state.user, ...partial } : null })),
 
     addMessage: (message) => set((state) => {
@@ -199,6 +203,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                         ]);
                         set({
                             user: { ...user, equipment, abilities },
+                            authId: authUser.id,
                             messages,
                             quests,
                         });
@@ -241,9 +246,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     persistToDB: async () => {
-        const { user, messages, quests } = get();
+        const { user, authId, messages, quests } = get();
         const promises: Promise<void>[] = [];
-        if (user) promises.push(db.saveUser(user));
+        if (user) promises.push(db.saveUser(user, authId || undefined));
         if (messages.length > 0) promises.push(db.saveMessages(user?.id, messages));
         if (quests.length > 0) promises.push(db.saveQuests(user?.id, quests));
         await Promise.all(promises);

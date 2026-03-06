@@ -12,6 +12,7 @@ export const BootSequence: React.FC = () => {
     const navigate = useNavigate();
     const user = useGameStore(state => state.user);
     const setUser = useGameStore(state => state.setUser);
+    const setAuthId = useGameStore(state => state.setAuthId);
     const { setBootComplete, bootSkipped, setBootSkipped } = useUIStore();
 
     const [step, setStep] = useState(0);
@@ -31,6 +32,7 @@ export const BootSequence: React.FC = () => {
                         const dbUser = await db.getUser(authUser.id);
                         if (dbUser) {
                             setUser(dbUser);
+                            setAuthId(authUser.id);
                             setHasSession(true);
                         }
                     }
