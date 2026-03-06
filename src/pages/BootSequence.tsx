@@ -18,6 +18,8 @@ export const BootSequence: React.FC = () => {
     const [progress, setProgress] = useState(0);
     const [checkedAuth, setCheckedAuth] = useState(false);
     const [hasSession, setHasSession] = useState(false);
+    // Pre-roll the sustainability line chance once per boot session (15%)
+    const [showSustainLine] = useState(() => Math.random() < 0.15);
 
     // Check for existing auth session on mount
     useEffect(() => {
@@ -128,6 +130,11 @@ export const BootSequence: React.FC = () => {
                 <>
                     {step >= 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text={`ARCHITECT ${displayUser.designation} RECOGNIZED.`} speed={20} /></div>}
                     {step >= 3 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="RESUMING SESSION..." speed={20} /></div>}
+                    {step >= 3 && showSustainLine && (
+                        <div style={{ display: 'block', marginBottom: 8, color: 'var(--text-muted)' }}>
+                            <TypewriterText text="GRID SUSTAINABILITY: COMMUNITY-FUNDED ⚡" speed={20} />
+                        </div>
+                    )}
                     <div style={{ position: 'absolute', bottom: 32, right: 32, color: 'var(--text-muted)' }}>(tap to skip)</div>
                 </>
             )}

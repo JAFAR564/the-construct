@@ -183,6 +183,67 @@ export const Settings: React.FC = () => {
                     )}
                 </div>
 
+                {/* Support Section */}
+                <div style={{ borderTop: '1px dashed var(--border-terminal)', paddingTop: 24 }}>
+                    <div style={{
+                        fontSize: '11px',
+                        fontFamily: 'var(--font-mono)',
+                        color: 'var(--accent-warning, #FFA500)',
+                        letterSpacing: '0.1em',
+                        marginBottom: 12,
+                    }}>
+                        ▸ SUPPORT THE GRID
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontFamily: 'var(--font-mono)', fontSize: '13px' }}>
+                        <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                            CONSTRUCT OS operates at zero cost. No ads. No paywalls.
+                            No data harvesting. If The Grid has value to you, consider
+                            fueling its expansion.
+                        </p>
+                        <a
+                            href="https://ko-fi.com/litxarchitect"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                display: 'inline-block',
+                                padding: '10px 20px',
+                                border: '1px solid var(--accent-warning, #FFA500)',
+                                color: 'var(--accent-warning, #FFA500)',
+                                textDecoration: 'none',
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '13px',
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                textShadow: '0 0 5px var(--accent-warning, #FFA500)',
+                            }}
+                        >
+                            [⚡] FUEL THE GRID — Ko-fi
+                        </a>
+                        <a
+                            href="https://github.com/JAFAR564/the-construct"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                display: 'inline-block',
+                                padding: '10px 20px',
+                                border: '1px solid var(--text-secondary)',
+                                color: 'var(--text-secondary)',
+                                textDecoration: 'none',
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '13px',
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            [★] STAR ON GITHUB
+                        </a>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: 0 }}>
+                            100% voluntary. Zero gameplay impact. All funds sustain
+                            infrastructure and development.
+                        </p>
+                    </div>
+                </div>
+
                 <div style={{ marginTop: 32, fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
                     CONSTRUCT OS v{import.meta.env.VITE_APP_VERSION || '3.0.0'}<br />
                     By the Architect Cooperative

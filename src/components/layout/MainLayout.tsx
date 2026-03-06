@@ -77,6 +77,26 @@ export const MainLayout: React.FC = () => {
                     <span className="nav-label">SYS</span>
                 </NavLink>
             </nav>
+
+            {/* Micro-footer — barely visible, non-intrusive */}
+            <div style={{
+                textAlign: 'center',
+                fontSize: '9px',
+                color: 'var(--text-muted)',
+                padding: '3px 0 2px',
+                fontFamily: 'var(--font-mono)',
+                opacity: 0.6,
+            }}>
+                CONSTRUCT OS — Community Funded |{' '}
+                <a
+                    href="https://ko-fi.com/litxarchitect"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'inherit', textDecoration: 'none' }}
+                >
+                    ⚡ Support
+                </a>
+            </div>
         </div>
     );
 };
