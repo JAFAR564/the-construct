@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { useSlashCommands } from '@/hooks/useSlashCommands';
-import { CommandInput } from '@/components/ui/CommandInput';
-import { GlitchText } from '@/components/ui/GlitchText';
-import { checkSkillRequirement } from '@/services/questGenerator';
+import { FeedLayout } from '@/components/feed/FeedLayout';
+import { FeedCard, QuestStatusCard, QuestDecisionCard, LoadingCard } from '@/components/feed/FeedCard';
+import { PremiumCommandInput } from '@/components/feed/PremiumCommandInput';
 import { SoundManager } from '@/utils/soundManager';
 import type { ChatMessage, Choice, Quest } from '@/types';
 
@@ -23,6 +23,7 @@ export const Terminal: React.FC = () => {
     return activeQuest.choices?.find(c => c.stageIndex === activeQuest.currentStage && !c.chosenOption);
   }, [activeQuest]);
 
+  /* Welcome message */
   useEffect(() => {
     if (welcomeSent.current) return;
     if (messages.length > 0) return;
@@ -45,6 +46,7 @@ export const Terminal: React.FC = () => {
     });
   }, [messages.length, user, activeQuest, addMessage]);
 
+  /* Auto-scroll + notification sound */
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
 
@@ -56,6 +58,7 @@ export const Terminal: React.FC = () => {
     }
   }, [messages, isLoading, currentChoice]);
 
+  /* Mark stage as viewed */
   useEffect(() => {
     if (!activeQuest || !user) return;
     if (activeQuest.currentStage === 0 && !activeQuest.stageViewed?.[0]) {
@@ -65,6 +68,7 @@ export const Terminal: React.FC = () => {
     }
   }, [activeQuest, user, updateQuest]);
 
+  /* Handlers */
   const handleSubmit = (val: string) => {
     if (val.startsWith('/')) {
       executeCommand(val);
@@ -98,166 +102,38 @@ export const Terminal: React.FC = () => {
     });
   };
 
-  const renderMessage = (msg: ChatMessage) => {
-    const isGlitch = msg.glitch || msg.source === 'ANOMALY';
-    let color = 'var(--text-primary)';
-    let prefix = '';
-
-    switch (msg.source) {
-      case 'SYSTEM': color = 'var(--text-secondary)'; prefix = 'SYSTEM: '; break;
-      case 'ARCHITECT': color = 'var(--text-primary)'; prefix = '> '; break;
-      case 'AI_DM': color = 'var(--text-primary)'; prefix = ''; break;
-      case 'NPC': color = 'var(--accent-info)'; prefix = '[NPC]: '; break;
-      case 'ANOMALY': color = 'var(--accent-danger)'; prefix = ''; break;
-    }
-
-    const contentStr = prefix + msg.content;
-    const isAiDm = msg.source === 'AI_DM';
-
-    return (
-      <div key={msg.id} style={{ marginBottom: 16, color, whiteSpace: 'pre-wrap' }} className={isAiDm ? 'terminal-glow' : ''}>
-        {isGlitch ? <GlitchText text={contentStr} /> : <span>{contentStr}</span>}
-        {msg.choices && msg.choices.length > 0 && (
-          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {msg.choices.map(c => (
-              <button
-                key={c.key}
-                onClick={() => handleChoice(c)}
-                disabled={c.disabled}
-                style={{
-                  background: 'none', border: `1px solid ${color}`, color,
-                  padding: '4px 8px', fontFamily: 'var(--font-mono)', cursor: c.disabled ? 'not-allowed' : 'pointer',
-                  opacity: c.disabled ? 0.5 : 1, textAlign: 'left'
-                }}
-              >
-                [{c.key}] {c.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      maxHeight: 'calc(100vh - 120px)',
-      overflow: 'hidden'
-    }}>
-      <div
-        className="message-feed"
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          paddingBottom: 16
-        }}
-      >
-        {messages.map(renderMessage)}
-        {isLoading && <div style={{ color: 'var(--text-muted)', animation: 'flicker 1s infinite' }}>PROCESSING...</div>}
+    <FeedLayout
+      inputBar={<PremiumCommandInput onSubmit={handleSubmit} disabled={isLoading} />}
+    >
+      {/* Message feed as cards */}
+      {messages.map((msg: ChatMessage, idx: number) => (
+        <FeedCard
+          key={msg.id}
+          message={msg}
+          onChoice={handleChoice}
+          animationDelay={idx > messages.length - 4 ? (messages.length - 1 - idx) * 60 : 0}
+        />
+      ))}
 
-        {/* Quest Status Display */}
-        {activeQuest && !currentChoice && (
-          <div style={{
-            marginTop: 16,
-            padding: 12,
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-terminal)',
-          }}>
-            <div style={{ color: 'var(--accent-warning)', fontSize: '10px', letterSpacing: 1, marginBottom: 4 }}>
-              DIRECTIVE UPDATE
-            </div>
-            <div style={{ color: 'var(--faction-active)', fontWeight: 'bold', fontSize: '12px' }}>
-              [{activeQuest.title}]
-            </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: 4 }}>
-              Stage {activeQuest.currentStage + 1} of {activeQuest.totalStages}
-            </div>
-            {activeQuest.currentStage < activeQuest.totalStages && activeQuest.narrative?.[activeQuest.currentStage] && (
-              <div style={{
-                marginTop: 8,
-                padding: 8,
-                backgroundColor: 'var(--bg-dark)',
-                borderLeft: '2px solid var(--faction-active)',
-                color: 'var(--text-secondary)',
-                fontSize: '11px',
-                lineHeight: 1.6,
-              }}>
-                {activeQuest.narrative[activeQuest.currentStage]}
-              </div>
-            )}
-          </div>
-        )}
+      {/* Loading indicator */}
+      {isLoading && <LoadingCard />}
 
-        {/* Quest Choice Display */}
-        {currentChoice && user && (
-          <div style={{
-            marginTop: 16,
-            padding: 12,
-            backgroundColor: 'rgba(255, 215, 0, 0.05)',
-            border: '1px solid var(--accent-warning)',
-          }}>
-            <div style={{ color: 'var(--accent-warning)', fontSize: '10px', letterSpacing: 1, marginBottom: 8 }}>
-              ⚠ DECISION REQUIRED
-            </div>
-            <div style={{ color: 'var(--text-primary)', fontSize: '12px', marginBottom: 12 }}>
-              {currentChoice.prompt}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {currentChoice.options.map(option => {
-                const skillCheck = checkSkillRequirement(user, option);
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => handleQuestChoice(currentChoice.id, option.id)}
-                    style={{
-                      background: 'transparent',
-                      border: `1px solid ${skillCheck.qualified ? 'var(--faction-active)' : 'var(--border-terminal)'}`,
-                      color: 'var(--text-primary)',
-                      padding: '8px 12px',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      opacity: skillCheck.qualified ? 1 : 0.6,
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 'bold' }}>
-                        [{option.id.toUpperCase()}] {option.label}
-                      </span>
-                      {option.skillCheck && (
-                        <span style={{
-                          fontSize: '10px',
-                          color: skillCheck.qualified ? 'var(--faction-active)' : 'var(--accent-danger)',
-                        }}>
-                          {skillCheck.qualified ? '✓ QUALIFIED' : '✗ INSUFFICIENT'}
-                          {' '}({skillCheck.userLevel}/{option.skillThreshold} {option.skillCheck})
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: 4 }}>
-                      {option.description}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '9px', marginTop: 8, fontStyle: 'italic' }}>
-              Tip: You can attempt options you're not qualified for, but success chance is reduced.
-            </div>
-          </div>
-        )}
+      {/* Quest Status — pinned directive (when no decision pending) */}
+      {activeQuest && !currentChoice && (
+        <QuestStatusCard quest={activeQuest} />
+      )}
 
-        <div ref={endRef} />
-      </div>
+      {/* Quest Decision — interactive choice panel */}
+      {currentChoice && user && (
+        <QuestDecisionCard
+          choice={currentChoice}
+          user={user}
+          onChoose={handleQuestChoice}
+        />
+      )}
 
-      <div style={{ flexShrink: 0, borderTop: '1px solid var(--border-terminal)', paddingTop: 8 }}>
-        <CommandInput onSubmit={handleSubmit} disabled={isLoading} />
-      </div>
-    </div>
+      <div ref={endRef} />
+    </FeedLayout>
   );
 };

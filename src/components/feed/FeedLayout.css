@@ -1,0 +1,440 @@
+/* ============================================
+   FEED LAYOUT — 3-Column Responsive Shell
+   ============================================ */
+
+.feed-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 240px;
+    gap: 0;
+    height: 100%;
+    max-height: calc(100vh - 120px);
+    overflow: hidden;
+}
+
+/* ─── Left Sidebar ─── */
+.feed-layout__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 12px 8px 0;
+    overflow-y: auto;
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
+    scrollbar-width: none;
+}
+
+.feed-layout__sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Center Feed ─── */
+.feed-layout__center {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 16px;
+    position: relative;
+}
+
+.feed-layout__scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 16px;
+    scroll-behavior: smooth;
+}
+
+/* Feed scrollbar styling */
+.feed-layout__scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.feed-layout__scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.feed-layout__scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+}
+
+.feed-layout__scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.feed-layout__scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.feed-layout__input-area {
+    flex-shrink: 0;
+    padding: 10px 0 4px 0;
+    position: relative;
+}
+
+/* ─── Right Panel ─── */
+.feed-layout__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0 8px 12px;
+    overflow-y: auto;
+    border-left: 1px solid rgba(255, 255, 255, 0.04);
+    scrollbar-width: none;
+}
+
+.feed-layout__panel::-webkit-scrollbar {
+    display: none;
+}
+
+/* ───────────────────────────────────
+   SIDEBAR WIDGETS — Glass Cards
+   ─────────────────────────────────── */
+
+.sidebar-widget {
+    background: linear-gradient(145deg, rgba(26, 26, 26, 0.75), rgba(13, 13, 13, 0.85));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.sidebar-widget:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-widget__title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sidebar-widget__title::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    box-shadow: 0 0 6px var(--text-primary);
+}
+
+/* ─── Profile Widget ─── */
+.profile-widget__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, rgba(0, 255, 65, 0.15), rgba(0, 191, 255, 0.1));
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    box-shadow: 0 0 12px rgba(0, 255, 65, 0.15);
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.profile-widget__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.profile-widget__name {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 2px;
+}
+
+.profile-widget__rank {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+.profile-widget__stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.profile-widget__stat {
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+}
+
+.profile-widget__stat-val {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.profile-widget__stat-label {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* ─── XP Bar ─── */
+.xp-bar-container {
+    margin-top: 10px;
+}
+
+.xp-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.xp-bar-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--text-primary), var(--accent-info));
+    border-radius: 4px;
+    box-shadow: 0 0 8px var(--text-primary);
+    transition: width 0.5s ease;
+}
+
+/* ─── Nav Links ─── */
+.nav-widget__links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-widget__link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.nav-widget__link:hover,
+.nav-widget__link--active {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+}
+
+.nav-widget__link--active {
+    border-left: 2px solid var(--text-primary);
+    box-shadow: inset 4px 0 8px rgba(0, 255, 65, 0.06);
+}
+
+.nav-widget__icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+}
+
+/* ─── Sector Widget (Right Panel) ─── */
+.sector-widget__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.sector-widget__key {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sector-widget__val {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-bright);
+}
+
+/* ─── Faction Widget (Right Panel) ─── */
+.faction-widget__name {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--faction-active);
+    margin-bottom: 6px;
+    text-shadow: 0 0 8px var(--faction-glow);
+}
+
+.faction-widget__prestige {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent-warning);
+}
+
+/* ─── Command Input Bar — Premium Floating ─── */
+.premium-input-bar {
+    position: relative;
+    background: linear-gradient(145deg, rgba(26, 26, 26, 0.9), rgba(13, 13, 13, 0.95));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.premium-input-bar:focus-within {
+    border-color: rgba(0, 255, 65, 0.25);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 255, 65, 0.1);
+}
+
+.premium-input-bar__inner {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    gap: 10px;
+}
+
+.premium-input-bar__prompt {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-primary);
+    text-shadow: 0 0 6px var(--text-primary);
+    animation: flicker 1s infinite;
+    flex-shrink: 0;
+}
+
+.premium-input-bar__field {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-bright);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    outline: none;
+    caret-color: var(--text-primary);
+}
+
+.premium-input-bar__field::placeholder {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+.premium-input-bar__field:disabled {
+    opacity: 0.4;
+}
+
+/* Autocomplete popup */
+.premium-input-bar__autocomplete {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    margin-bottom: 6px;
+    background: linear-gradient(145deg, rgba(30, 30, 30, 0.98), rgba(15, 15, 15, 0.98));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+}
+
+.premium-input-bar__autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.premium-input-bar__autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.premium-input-bar__autocomplete-item--selected {
+    background: rgba(0, 255, 65, 0.06);
+}
+
+.premium-input-bar__autocomplete-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.premium-input-bar__autocomplete-cmd {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.premium-input-bar__autocomplete-desc {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+/* ───────────────────────────────────
+   RESPONSIVE — Collapse on mobile
+   ─────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .feed-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .feed-layout__sidebar,
+    .feed-layout__panel {
+        display: none;
+    }
+
+    .feed-layout__center {
+        padding: 0 4px;
+    }
+}
+
+@media (min-width: 1025px) and (max-width: 1280px) {
+    .feed-layout {
+        grid-template-columns: 220px 1fr 200px;
+    }
+}

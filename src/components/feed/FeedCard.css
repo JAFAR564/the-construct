@@ -1,0 +1,421 @@
+/* ============================================
+   FEED CARD — Premium Glassmorphism Post Card
+   ============================================ */
+
+@keyframes feedCardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes feedCardPulseGlow {
+  0%, 100% { box-shadow: var(--card-glow-idle); }
+  50%      { box-shadow: var(--card-glow-pulse); }
+}
+
+@keyframes shimmerBorder {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.feed-card {
+  --card-glow-idle: 0 0 0 1px rgba(255,255,255,0.04), 0 2px 12px rgba(0,0,0,0.5);
+  --card-glow-pulse: 0 0 0 1px rgba(255,255,255,0.07), 0 2px 20px rgba(0,0,0,0.6);
+
+  position: relative;
+  background: linear-gradient(145deg, rgba(26,26,26,0.85), rgba(13,13,13,0.92));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 0;
+  margin-bottom: 12px;
+  animation: feedCardSlideIn 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  box-shadow: var(--card-glow-idle);
+  overflow: hidden;
+}
+
+.feed-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.6);
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* ---------- Source-specific accent border ---------- */
+.feed-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  border-radius: 14px 0 0 14px;
+  background: var(--card-accent, var(--text-secondary));
+  opacity: 0.7;
+  transition: opacity 0.22s ease, width 0.22s ease;
+}
+.feed-card:hover::before {
+  opacity: 1;
+  width: 4px;
+}
+
+/* ---------- Header Row ---------- */
+.feed-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px 0 18px;
+}
+
+.feed-card__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: var(--avatar-bg, rgba(0,255,65,0.12));
+  color: var(--avatar-color, var(--text-primary));
+  border: 1px solid var(--avatar-border, rgba(0,255,65,0.2));
+  box-shadow: 0 0 8px var(--avatar-glow, rgba(0,255,65,0.15));
+  transition: box-shadow 0.22s ease;
+  text-shadow: 0 0 6px var(--avatar-glow, rgba(0,255,65,0.4));
+}
+.feed-card:hover .feed-card__avatar {
+  box-shadow: 0 0 14px var(--avatar-glow, rgba(0,255,65,0.3));
+}
+
+.feed-card__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-card__author {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-bright);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.feed-card__badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--badge-bg, rgba(0,255,65,0.1));
+  color: var(--badge-color, var(--text-primary));
+  border: 1px solid var(--badge-border, rgba(0,255,65,0.2));
+}
+
+.feed-card__timestamp {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Body ---------- */
+.feed-card__body {
+  padding: 12px 18px 14px 18px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-bright);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* System source: use mono */
+.feed-card--system .feed-card__body {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.feed-card--anomaly .feed-card__body {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--accent-danger);
+  text-shadow: 0 0 6px rgba(255,51,51,0.4);
+}
+
+.feed-card--ai_dm .feed-card__body {
+  line-height: 1.8;
+}
+
+/* ---------- Action Bar / Choices ---------- */
+.feed-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 18px 14px 18px;
+}
+
+.feed-card__action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feed-card__action-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  opacity: 0;
+  background: linear-gradient(135deg, var(--card-accent, var(--text-primary)) 0%, transparent 60%);
+  transition: opacity 0.2s ease;
+}
+
+.feed-card__action-btn:hover {
+  border-color: var(--card-accent, var(--text-primary));
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px var(--avatar-glow, rgba(0,255,65,0.2));
+}
+.feed-card__action-btn:hover::after {
+  opacity: 0.08;
+}
+
+.feed-card__action-btn:active {
+  transform: translateY(0);
+}
+
+.feed-card__action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.feed-card__action-key {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+/* ---------- Quest Decision Panel ---------- */
+.feed-card__quest-panel {
+  margin: 0 18px 14px 18px;
+  padding: 14px;
+  background: rgba(255,215,0,0.04);
+  border: 1px solid rgba(255,215,0,0.15);
+  border-radius: 10px;
+}
+
+.feed-card__quest-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent-warning);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.feed-card__quest-prompt {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-bright);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.feed-card__quest-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feed-card__quest-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: var(--font-mono);
+}
+
+.feed-card__quest-option:hover {
+  border-color: var(--faction-active);
+  background: rgba(0,255,65,0.05);
+  transform: translateX(3px);
+}
+
+.feed-card__quest-option--qualified {
+  border-color: rgba(0,255,65,0.15);
+}
+
+.feed-card__quest-option-label {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-bright);
+}
+
+.feed-card__quest-option-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.feed-card__quest-check {
+  font-size: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.feed-card__quest-check--pass { color: var(--faction-active); }
+.feed-card__quest-check--fail { color: var(--accent-danger); }
+
+.feed-card__quest-tip {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 10px;
+  font-family: var(--font-ui);
+}
+
+/* ---------- Directive Pinned Status ---------- */
+.feed-card__directive {
+  margin: 0 18px 14px 18px;
+  padding: 12px 14px;
+  background: rgba(0,255,65,0.04);
+  border: 1px solid rgba(0,255,65,0.1);
+  border-radius: 10px;
+}
+
+.feed-card__directive-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent-warning);
+  margin-bottom: 4px;
+}
+
+.feed-card__directive-title {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--faction-active);
+}
+
+.feed-card__directive-stage {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.feed-card__directive-narrative {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(13,13,13,0.6);
+  border-left: 2px solid var(--faction-active);
+  border-radius: 0 6px 6px 0;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ---------- Loading Indicator ---------- */
+@keyframes feedPulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+
+.feed-card--loading {
+  border-color: rgba(0,255,65,0.1);
+}
+
+.feed-card__loading-text {
+  padding: 16px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  animation: feedPulse 1.2s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feed-card__loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  box-shadow: 0 0 6px var(--text-primary);
+  animation: feedPulse 1.2s ease-in-out infinite;
+}
+.feed-card__loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.feed-card__loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ---------- Stat Changes ---------- */
+.feed-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 18px 12px 18px;
+}
+
+.feed-card__stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.feed-card__stat-chip--positive {
+  background: rgba(0,255,65,0.1);
+  color: var(--text-primary);
+  border: 1px solid rgba(0,255,65,0.2);
+}
+
+.feed-card__stat-chip--negative {
+  background: rgba(255,51,51,0.1);
+  color: var(--accent-danger);
+  border: 1px solid rgba(255,51,51,0.2);
+}
