@@ -415,12 +415,37 @@
 }
 
 /* ───────────────────────────────────
+   PARENT OVERRIDES — Break out of
+   MainLayout max-width constraints
+   ─────────────────────────────────── */
+
+/* When the feed layout exists inside .main-content, override the 720px cap */
+.main-content:has(.feed-layout) {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 56px !important;
+}
+
+/* On desktop, hide the bottom nav when feed is shown (sidebar has nav) */
+@media (min-width: 1025px) {
+    body:has(.feed-layout) .bottom-nav {
+        display: none;
+    }
+
+    .main-content:has(.feed-layout) {
+        padding-bottom: 0 !important;
+    }
+}
+
+/* ───────────────────────────────────
    RESPONSIVE — Collapse on mobile
    ─────────────────────────────────── */
 
 @media (max-width: 1024px) {
     .feed-layout {
         grid-template-columns: 1fr;
+        max-height: calc(100vh - 130px);
     }
 
     .feed-layout__sidebar,
@@ -429,12 +454,19 @@
     }
 
     .feed-layout__center {
-        padding: 0 4px;
+        padding: 0 8px;
     }
 }
 
 @media (min-width: 1025px) and (max-width: 1280px) {
     .feed-layout {
         grid-template-columns: 220px 1fr 200px;
+    }
+}
+
+@media (min-width: 1281px) {
+    .feed-layout {
+        max-width: 1400px;
+        margin: 0 auto;
     }
 }
