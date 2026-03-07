@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useFactionStore } from '@/stores/useFactionStore';
 import { useGameStore } from '@/stores/useGameStore';
-import { TerminalCard } from '@/components/ui/TerminalCard';
 import { FACTIONS } from '@/constants/factions';
 import type { LeaderboardEntry } from '@/types';
+import '@/styles/PremiumPage.css';
 
 export const Leaderboard: React.FC = () => {
     const { factionStatuses, fetchFactionData, warTimeRemaining } = useFactionStore();
     const user = useGameStore(state => state.user);
-
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
     useEffect(() => {
@@ -19,74 +18,76 @@ export const Leaderboard: React.FC = () => {
             { rank: 3, designation: 'RUST_HOUND', faction: 'IRONBORN_COLLECTIVE', playerRank: 'COMMANDER', prestige: 45200, isCurrentUser: false },
         ];
         if (user) {
-            mock.push({
-                rank: 42,
-                designation: user.designation || 'UNKNOWN',
-                faction: user.faction || 'TECHNOCRATS',
-                playerRank: user.rank || 'INITIATE',
-                prestige: user.prestige || 0,
-                isCurrentUser: true
-            });
+            mock.push({ rank: 42, designation: user.designation || 'UNKNOWN', faction: user.faction || 'TECHNOCRATS', playerRank: user.rank || 'INITIATE', prestige: user.prestige || 0, isCurrentUser: true });
         }
         setEntries(mock);
     }, [fetchFactionData, user]);
 
     const safeFactionStatuses = Array.isArray(factionStatuses) ? factionStatuses : [];
-    const maxPower = safeFactionStatuses.length > 0
-        ? Math.max(...safeFactionStatuses.map(f => f?.totalPower || 0))
-        : 1000;
+    const maxPower = safeFactionStatuses.length > 0 ? Math.max(...safeFactionStatuses.map(f => f?.totalPower || 0)) : 1000;
 
     return (
-        <TerminalCard title="POWER RANKINGS">
+        <div className="ppage">
+            <div className="ppage__title">POWER RANKINGS</div>
+            <div className="ppage__title-divider" />
+
+            {/* Faction Dominance */}
             <div style={{ marginBottom: 32 }}>
-                <h3 style={{ color: 'var(--text-secondary)', marginBottom: 16, borderBottom: '1px dashed var(--border-terminal)', paddingBottom: 4 }}>FACTION DOMINANCE</h3>
+                <h3 className="ppage__section">FACTION DOMINANCE</h3>
                 {safeFactionStatuses.length > 0 ? (
-                    safeFactionStatuses.map(f => {
-                        if (!f) return null;
-                        const fd = FACTIONS.find(x => x.id === f.faction);
-                        const color = fd ? fd.color : 'var(--text-primary)';
-                        const power = f.totalPower || 0;
-                        const pct = (power / maxPower) * 100;
-                        return (
-                            <div key={f.faction || 'unknown'} style={{ marginBottom: 12 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: 4 }}>
-                                    <span style={{ color }}>{fd?.name || f.faction || 'UNKNOWN FACTION'}</span>
-                                    <span>{power.toLocaleString()} PWR</span>
+                    <div className="ppage__flex-col">
+                        {safeFactionStatuses.map(f => {
+                            if (!f) return null;
+                            const fd = FACTIONS.find(x => x.id === f.faction);
+                            const color = fd ? fd.color : 'var(--text-primary)';
+                            const power = f.totalPower || 0;
+                            const pct = (power / maxPower) * 100;
+                            return (
+                                <div key={f.faction || 'unknown'} className="ppage__card" style={{ padding: '12px 14px' }}>
+                                    <div className="ppage__flex-between" style={{ marginBottom: 6 }}>
+                                        <span style={{ color, fontWeight: 700, fontSize: '13px', fontFamily: 'var(--font-ui)' }}>{fd?.name || f.faction || 'UNKNOWN'}</span>
+                                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-bright)' }}>{power.toLocaleString()} PWR</span>
+                                    </div>
+                                    <div className="ppage__power-track">
+                                        <div className="ppage__power-fill" style={{ width: `${pct}%`, backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
+                                    </div>
                                 </div>
-                                <div style={{ height: 8, backgroundColor: 'var(--bg-elevated)' }}>
-                                    <div style={{ width: `${pct}%`, backgroundColor: color, height: '100%' }} />
-                                </div>
-                            </div>
-                        );
-                    })
+                            );
+                        })}
+                    </div>
                 ) : (
-                    <div style={{ color: 'var(--text-muted)' }}>SIMULATED DATA — GRID LINK PENDING</div>
+                    <div className="ppage__muted">SIMULATED DATA — GRID LINK PENDING</div>
                 )}
             </div>
 
+            {/* Top Architects */}
             <div style={{ marginBottom: 32 }}>
-                <h3 style={{ color: 'var(--text-secondary)', marginBottom: 16, borderBottom: '1px dashed var(--border-terminal)', paddingBottom: 4 }}>TOP ARCHITECTS</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <h3 className="ppage__section">TOP ARCHITECTS</h3>
+                <div className="ppage__flex-col ppage__gap-sm">
                     {(entries || []).map(e => {
                         if (!e) return null;
                         const fd = FACTIONS.find(x => x.id === e.faction);
                         const color = fd ? fd.color : 'var(--text-primary)';
                         return (
-                            <div key={e.rank || Math.random()} style={{ display: 'flex', alignItems: 'center', backgroundColor: e.isCurrentUser ? 'var(--faction-active)' : 'transparent', color: e.isCurrentUser ? 'inherit' : 'inherit', padding: '4px 8px' }}>
-                                <div style={{ width: 40, fontWeight: 'bold' }}>#{e.rank || '?'}</div>
-                                <div style={{ flex: 1 }}>{e.designation || 'UNKNOWN'} <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>({e.playerRank || 'UNRANKED'})</span></div>
-                                <div style={{ color: e.isCurrentUser ? 'inherit' : color, width: 40, textAlign: 'center' }}>{(e.faction || '??').substring(0, 2)}</div>
-                                <div style={{ width: 80, textAlign: 'right' }}>{e.prestige || 0}</div>
+                            <div key={e.rank || Math.random()} className={`ppage__rank-row ${e.isCurrentUser ? 'ppage__rank-row--self' : ''}`}>
+                                <div className="ppage__rank-num">#{e.rank || '?'}</div>
+                                <div className="ppage__rank-name">
+                                    {e.designation || 'UNKNOWN'}
+                                    <span className="ppage__rank-sub">({e.playerRank || 'UNRANKED'})</span>
+                                </div>
+                                <div className="ppage__rank-faction" style={{ color }}>{(e.faction || '??').substring(0, 2)}</div>
+                                <div className="ppage__rank-score">{e.prestige || 0}</div>
                             </div>
                         );
                     })}
                 </div>
             </div>
 
+            {/* Weekly War */}
             <div>
-                <h3 style={{ color: 'var(--text-secondary)', marginBottom: 16, borderBottom: '1px dashed var(--border-terminal)', paddingBottom: 4 }}>WEEKLY WAR STATUS</h3>
-                <div style={{ fontSize: '1.2rem', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>T-MINUS: {warTimeRemaining || 'UNKNOWN'}</div>
+                <h3 className="ppage__section">WEEKLY WAR STATUS</h3>
+                <div className="ppage__war-timer">T-MINUS: {warTimeRemaining || 'UNKNOWN'}</div>
             </div>
-        </TerminalCard>
+        </div>
     );
 };
