@@ -29,6 +29,9 @@ function migrateUser(user: User): User {
     if (!migrated.settings?.themeIntensity) {
         migrated.settings = { ...migrated.settings, themeIntensity: 'balanced' };
     }
+    if (migrated.settings?.ambientEnabled == null) {
+        migrated.settings = { ...migrated.settings, ambientEnabled: false, ambientVolume: 15 };
+    }
 
     return migrated;
 }

@@ -158,7 +158,7 @@ export const Login: React.FC = () => {
             titles: [],
             joinedAt: new Date().toISOString(),
             lastActiveAt: new Date().toISOString(),
-            settings: { soundEnabled: true, scanlineIntensity: 70, crtFlicker: true, textSpeed: 30, themeIntensity: 'balanced' as const },
+            settings: { soundEnabled: true, ambientEnabled: false, ambientVolume: 15, scanlineIntensity: 70, crtFlicker: true, textSpeed: 30, themeIntensity: 'balanced' as const },
             equipment: STARTER_EQUIPMENT,
             equippedItems: {
                 WEAPON: 'starter_weapon',

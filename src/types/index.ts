@@ -83,6 +83,8 @@ export interface MemoryLogEntry {
 
 export interface UserSettings {
   soundEnabled: boolean;
+  ambientEnabled: boolean;
+  ambientVolume: number;
   scanlineIntensity: number;
   crtFlicker: boolean;
   textSpeed: number;

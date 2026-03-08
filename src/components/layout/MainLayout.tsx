@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { Terminal, User, Map, ScrollText, Settings, Users } from 'lucide-react';
 import { useGameStore } from '@/stores/useGameStore';
@@ -7,12 +7,33 @@ import { useTheme } from '@/hooks/useTheme';
 import { ScanlineOverlay } from '@/components/ui/ScanlineOverlay';
 import { ParticleBackground } from '@/components/ui/ParticleBackground';
 import { apiClient } from '@/services/client';
+import { SoundManager } from '@/utils/soundManager';
 
 export const MainLayout: React.FC = () => {
     useTheme(); // Applies all CSS vars automatically
     const user = useGameStore(state => state.user);
     const { isOnline } = useOfflineDetect();
     const isBackendConnected = apiClient.isAvailable();
+
+    // Ambient audio lifecycle
+    useEffect(() => {
+        if (!user) return;
+        const ambientEnabled = user.settings?.ambientEnabled ?? false;
+        const ambientVolume = (user.settings?.ambientVolume ?? 15) / 100;
+
+        if (ambientEnabled && !SoundManager.isAmbientPlaying()) {
+            SoundManager.setAmbientVolume(ambientVolume);
+            SoundManager.startAmbient(user.faction);
+        } else if (!ambientEnabled && SoundManager.isAmbientPlaying()) {
+            SoundManager.stopAmbient();
+        }
+
+        return () => {
+            if (SoundManager.isAmbientPlaying()) {
+                SoundManager.stopAmbient();
+            }
+        };
+    }, [user?.settings?.ambientEnabled, user?.faction]);
 
     if (!user) return null;
 

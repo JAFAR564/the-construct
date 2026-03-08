@@ -3,6 +3,7 @@ import { useGameStore } from '@/stores/useGameStore';
 import * as localDB from '@/services/localDB';
 import { isSupabaseConfigured } from '@/services/supabase';
 import * as auth from '@/services/auth';
+import { SoundManager } from '@/utils/soundManager';
 import '@/styles/PremiumPage.css';
 
 export const Settings: React.FC = () => {
@@ -12,7 +13,7 @@ export const Settings: React.FC = () => {
     if (!user) return null;
 
     const settings = user.settings || {
-        soundEnabled: true, crtFlicker: true, scanlineIntensity: 50, textSpeed: 50, themeIntensity: 'balanced' as const,
+        soundEnabled: true, ambientEnabled: false, ambientVolume: 15, crtFlicker: true, scanlineIntensity: 50, textSpeed: 50, themeIntensity: 'balanced' as const,
     };
 
     const handleToggle = (key: keyof typeof settings) => updateUser({ settings: { ...settings, [key]: !settings[key] } });
@@ -75,6 +76,40 @@ export const Settings: React.FC = () => {
                         </button>
                     </div>
                     <div className="ppage__setting-desc">Toggle system audio synthesis.</div>
+                </div>
+
+                {/* Ambient Audio */}
+                <div className="ppage__setting">
+                    <div className="ppage__flex-between">
+                        <span className="ppage__setting-label">Ambient Audio</span>
+                        <button className={`ppage__toggle ${settings.ambientEnabled ? 'ppage__toggle--on' : 'ppage__toggle--off'}`} onClick={() => {
+                            const newVal = !settings.ambientEnabled;
+                            updateUser({ settings: { ...settings, ambientEnabled: newVal } });
+                            if (newVal) {
+                                SoundManager.setAmbientVolume((settings.ambientVolume ?? 15) / 100);
+                                SoundManager.startAmbient(user.faction);
+                            } else {
+                                SoundManager.stopAmbient();
+                            }
+                        }}>
+                            [{settings.ambientEnabled ? 'ON' : 'OFF'}]
+                        </button>
+                    </div>
+                    <div className="ppage__setting-desc">Procedural background drone. Faction-aware.</div>
+                    {settings.ambientEnabled && (
+                        <div style={{ marginTop: 8 }}>
+                            <div className="ppage__flex-between">
+                                <span className="ppage__setting-label" style={{ fontSize: '11px' }}>Ambient Volume</span>
+                                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-primary)' }}>{settings.ambientVolume ?? 15}%</span>
+                            </div>
+                            <input type="range" className="ppage__slider" min="1" max="50" value={settings.ambientVolume ?? 15}
+                                onChange={e => {
+                                    const val = parseInt(e.target.value);
+                                    handleSlider('ambientVolume', val);
+                                    SoundManager.setAmbientVolume(val / 100);
+                                }} />
+                        </div>
+                    )}
                 </div>
 
                 {/* CRT */}

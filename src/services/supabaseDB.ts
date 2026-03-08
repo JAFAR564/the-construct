@@ -289,6 +289,8 @@ function mapDbUserToUser(row: Record<string, unknown>): User {
         lastActiveAt: row.last_active_at as string,
         settings: {
             soundEnabled: row.sound_enabled as boolean,
+            ambientEnabled: (row.ambient_enabled as boolean) ?? false,
+            ambientVolume: (row.ambient_volume as number) ?? 15,
             scanlineIntensity: row.scanline_intensity as number,
             crtFlicker: row.crt_flicker as boolean,
             textSpeed: row.text_speed as number,
