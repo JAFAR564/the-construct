@@ -313,13 +313,14 @@
     position: relative;
     display: flex;
     justify-content: center;
+    align-items: flex-start;
 }
 
 .login-content {
     width: 100%;
     max-width: 480px;
-    margin-top: auto;
-    margin-bottom: auto;
+    padding-top: 10vh;
+    padding-bottom: 32px;
 }
 
 /* ─── Responsive ─── */
