@@ -10,6 +10,7 @@ import { isSupabaseConfigured } from '@/services/supabase';
 import * as auth from '@/services/auth';
 import * as db from '@/services/supabaseDB';
 import type { Faction, ElementalAffinity, User } from '@/types';
+import '@/pages/Login.css';
 
 // Helper to resolve a CSS variable reference like "var(--faction-technocrats)" to its computed hex value
 function resolveCSSColor(colorValue: string): string {
@@ -239,11 +240,11 @@ export const Login: React.FC = () => {
     // ── RENDER ──
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: 'black', padding: 32, overflowY: 'auto', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div className="login-page">
             <div className="crt-overlay flicker" />
             <div className="scanline" />
 
-            <div style={{ width: '100%', maxWidth: 480 }}>
+            <div className="login-content">
 
                 {/* ── AUTH STEP ── */}
                 {step === 'auth' && (
@@ -338,30 +339,34 @@ export const Login: React.FC = () => {
                     <div style={{ position: 'relative', zIndex: 1 }}>
                         <TypewriterText text="THREE FACTIONS SEEK YOUR ALLEGIANCE. CHOOSE YOUR ALIGNMENT:" speed={150} mode="word" />
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24, maxWidth: 600 }}>
+                        <div className="faction-cards">
                             {FACTIONS.map((f, i) => (
                                 <div
                                     key={f.id}
+                                    className={`faction-card${faction === f.id ? ' faction-card--selected' : ''}`}
+                                    style={{ '--card-color': f.color } as React.CSSProperties}
                                     onClick={() => handleFactionSelect(f)}
-                                    style={{
-                                        border: `1px solid ${f.color}`,
-                                        padding: 16,
-                                        cursor: 'pointer',
-                                        backgroundColor: faction === f.id ? `${f.color}33` : 'transparent'
-                                    }}
                                 >
-                                    <div style={{ color: f.color, fontSize: '1.2rem', marginBottom: 8, fontFamily: 'var(--font-display)' }}>
-                                        [{i + 1}] {f.name}
+                                    <span className="faction-card__corner faction-card__corner--tl" />
+                                    <span className="faction-card__corner faction-card__corner--br" />
+
+                                    <div className="faction-card__header">
+                                        <span className="faction-card__index">[{i + 1}]</span>
+                                        <span className="faction-card__name">{f.name}</span>
                                     </div>
-                                    <div style={{ color: 'var(--text-muted)' }}>{f.description}</div>
-                                    <div style={{ fontStyle: 'italic', margin: '8px 0' }}>{f.motto}</div>
-                                    <div style={{ fontSize: '0.9rem' }}>SKILL FOCUS: {f.skills.join(', ')}</div>
+                                    <div className="faction-card__description">{f.description}</div>
+                                    <div className="faction-card__motto">{f.motto}</div>
+                                    <div className="faction-card__skills">
+                                        {f.skills.map(skill => (
+                                            <span key={skill} className="faction-card__skill-tag">{skill}</span>
+                                        ))}
+                                    </div>
                                 </div>
                             ))}
                         </div>
 
                         {faction && (
-                            <div style={{ marginTop: 24 }}>
+                            <div className="faction-confirm">
                                 <TypewriterText text={`ALIGNMENT: ${faction}. CONFIRM? [Y/N]`} speed={20} />
                                 <input
                                     type="text"
