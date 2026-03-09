@@ -1,7 +1,7 @@
 import { supabase, isSupabaseConfigured } from '@/services/supabase';
 import * as localDB from '@/services/localDB';
 import type {
-    User, ChatMessage, Quest, Equipment, Ability,
+    User, ChatMessage, Quest, Equipment, Ability, JournalEntry,
     CoreSkill, Faction, Rank, ElementalAffinity, Alignment,
     EquipmentSlot, Rarity, AbilityCategory, QuestType, QuestStatus, QuestDifficulty,
 } from '@/types';
@@ -161,6 +161,54 @@ export async function saveQuests(userId: string | undefined, quests: Quest[]): P
     }
     // Individual quests are saved via saveQuest(). Bulk is localDB only.
     await localDB.saveQuests(quests);
+}
+
+// ── JOURNAL ──
+
+export async function getJournal(userId?: string): Promise<JournalEntry[]> {
+    if (!isSupabaseConfigured || !userId) return localDB.getJournal();
+
+    const { data, error } = await supabase
+        .from('journal_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false });
+
+    if (error || !data) return [];
+    return data.map(mapDbJournalToJournal);
+}
+
+export async function saveJournal(userId: string | undefined, entry: JournalEntry): Promise<void> {
+    if (!isSupabaseConfigured || !userId) {
+        const journal = await localDB.getJournal();
+        const idx = journal.findIndex(j => j.id === entry.id);
+        if (idx >= 0) journal[idx] = entry;
+        else journal.unshift(entry);
+        await localDB.saveJournal(journal);
+        return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await supabase
+        .from('journal_entries')
+        .upsert({
+            id: entry.id,
+            user_id: userId,
+            title: entry.title,
+            content: entry.content,
+            created_at: entry.createdAt,
+            updated_at: entry.updatedAt,
+        } as any, { onConflict: 'id' });
+
+    if (error) console.error('[SupabaseDB] Failed to save journal entry:', error);
+}
+
+export async function saveJournals(userId: string | undefined, entries: JournalEntry[]): Promise<void> {
+    if (!isSupabaseConfigured || !userId) {
+        await localDB.saveJournal(entries);
+        return;
+    }
+    await localDB.saveJournal(entries); // bulk local only
 }
 
 // ── EQUIPMENT ──
@@ -394,6 +442,16 @@ function mapDbQuestToQuest(row: Record<string, unknown>): Quest {
         failConsequence: (row.fail_consequence as string) || undefined,
         expiresAt: (row.expires_at as string) || undefined,
         completedAt: (row.completed_at as string) || undefined,
+    };
+}
+
+function mapDbJournalToJournal(row: Record<string, unknown>): JournalEntry {
+    return {
+        id: row.id as string,
+        title: row.title as string,
+        content: row.content as string,
+        createdAt: row.created_at as string,
+        updatedAt: row.updated_at as string,
     };
 }
 

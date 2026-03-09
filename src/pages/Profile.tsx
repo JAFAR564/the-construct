@@ -7,7 +7,7 @@ import { compressImage } from '@/utils/imageCompressor';
 import type { Equipment, Ability, EquipmentSlot, Alignment, Rarity } from '@/types';
 import '@/styles/PremiumPage.css';
 
-type ProfileTab = 'OVERVIEW' | 'ABILITIES' | 'EQUIPMENT' | 'BACKSTORY' | 'MEMORY LOG';
+type ProfileTab = 'OVERVIEW' | 'ABILITIES' | 'EQUIPMENT' | 'BACKSTORY' | 'MEMORY LOG' | 'JOURNAL';
 
 const ALIGNMENT_LABELS: Record<Alignment, string> = {
     LAWFUL_GOOD: 'Lawful Good', NEUTRAL_GOOD: 'Neutral Good', CHAOTIC_GOOD: 'Chaotic Good',
@@ -40,6 +40,13 @@ export const Profile: React.FC = () => {
     const [tagInput, setTagInput] = useState('');
     const [backstoryInit, setBackstoryInit] = useState(false);
     const [avatarUploading, setAvatarUploading] = useState(false);
+
+    // Journal State
+    const { journal, addJournalEntry, updateJournalEntry, deleteJournalEntry } = useGameStore();
+    const [selectedJournalId, setSelectedJournalId] = useState<string | null>(null);
+    const [journalTitleDraft, setJournalTitleDraft] = useState('');
+    const [journalContentDraft, setJournalContentDraft] = useState('');
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (!user) {
@@ -144,7 +151,9 @@ export const Profile: React.FC = () => {
                         </>
                     ) : (
                         <>
-                            <pre className="ppage__avatar-ascii">{`    ╔══════╗\n    ║ ◉  ◉ ║\n    ║  ──  ║\n    ║ ╲__╱ ║\n    ╚══════╝\n    ╔══════╗\n    ║      ║\n    ║      ║\n    ╚══╤╤══╝\n      ││`}</pre>
+                            <div className="ppage__avatar-placeholder">
+                                <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>[ NO AVATAR DATA ]</span>
+                            </div>
                             <button className="ppage__btn ppage__btn--primary ppage__btn--sm" style={{ marginTop: 10 }} onClick={() => fileInputRef.current?.click()} disabled={avatarUploading}>
                                 {avatarUploading ? '[PROCESSING...]' : '[UPLOAD AVATAR]'}
                             </button>
@@ -378,14 +387,121 @@ export const Profile: React.FC = () => {
         );
     };
 
+    /* ── TAB: JOURNAL ── */
+    const renderJournal = () => {
+        const selectedEntry = journal.find(j => j.id === selectedJournalId);
+
+        const handleNewEntry = () => {
+            setSelectedJournalId(null);
+            setJournalTitleDraft('');
+            setJournalContentDraft('');
+        };
+
+        const handleSelectEntry = (id: string) => {
+            const entry = journal.find(j => j.id === id);
+            if (entry) {
+                setSelectedJournalId(id);
+                setJournalTitleDraft(entry.title);
+                setJournalContentDraft(entry.content);
+            }
+        };
+
+        const handleSaveEntry = () => {
+            if (!journalTitleDraft.trim() && !journalContentDraft.trim()) return;
+
+            if (selectedJournalId) {
+                updateJournalEntry(selectedJournalId, {
+                    title: journalTitleDraft || 'Untitled Entry',
+                    content: journalContentDraft
+                });
+            } else {
+                const newId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
+                addJournalEntry({
+                    id: newId,
+                    title: journalTitleDraft || 'Untitled Entry',
+                    content: journalContentDraft,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+                setSelectedJournalId(newId);
+            }
+        };
+
+        const handleDeleteEntry = (id: string) => {
+            if (confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                deleteJournalEntry(id);
+                if (selectedJournalId === id) handleNewEntry();
+            }
+        };
+
+        return (
+            <div style={{ display: 'flex', gap: 20, minHeight: 400, flexWrap: 'wrap' }}>
+                {/* Left Column: Entry List */}
+                <div style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <button className="ppage__btn ppage__btn--primary-solid ppage__btn--full" onClick={handleNewEntry}>
+                        [+] NEW ENTRY
+                    </button>
+
+                    <div style={{ maxHeight: 500, overflowY: 'auto', paddingRight: 4 }} className="ppage__flex-col">
+                        {journal.length === 0 && (
+                            <div className="ppage__empty" style={{ padding: '20px 0' }}>No journal entries yet.</div>
+                        )}
+                        {journal.map(entry => (
+                            <div key={entry.id}
+                                className={`ppage__card ${selectedJournalId === entry.id ? 'ppage__card--active' : 'ppage__card--interactive'}`}
+                                onClick={() => handleSelectEntry(entry.id)}>
+                                <div className="ppage__flex-between">
+                                    <div style={{ color: selectedJournalId === entry.id ? 'var(--faction-active)' : 'var(--text-primary)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+                                        {entry.title}
+                                    </div>
+                                    <button className="ppage__btn" style={{ padding: '0 4px', color: 'var(--danger)' }}
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteEntry(entry.id); }}>
+                                        ✕
+                                    </button>
+                                </div>
+                                <div style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: 4 }}>
+                                    {new Date(entry.updatedAt).toLocaleDateString()} {new Date(entry.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Right Column: Editor */}
+                <div style={{ flex: '2 1 400px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <input className="ppage__input"
+                        value={journalTitleDraft}
+                        onChange={e => setJournalTitleDraft(e.target.value)}
+                        placeholder="Entry Title..."
+                        style={{ fontSize: 16, fontWeight: 700, color: 'var(--faction-active)', padding: '12px 16px' }}
+                    />
+                    <textarea className="ppage__textarea"
+                        value={journalContentDraft}
+                        onChange={e => setJournalContentDraft(e.target.value)}
+                        placeholder="Start writing..."
+                        style={{ flex: 1, minHeight: 300 }}
+                    />
+                    <div className="ppage__flex-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
+                            {selectedEntry ? `CREATED: ${new Date(selectedEntry.createdAt).toLocaleDateString()}` : 'UNSAVED ENTRY'}
+                        </span>
+                        <button className="ppage__btn ppage__btn--primary-solid" onClick={handleSaveEntry} style={{ minWidth: 150 }}>
+                            [SAVE ENTRY]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     /* ── MAIN RENDER ── */
     return (
         <div className="ppage">
             <div className="ppage__title">ARCHITECT DOSSIER</div>
             <div className="ppage__title-divider" />
 
-            <div className="ppage__tabs">
-                {(['OVERVIEW', 'ABILITIES', 'EQUIPMENT', 'BACKSTORY', 'MEMORY LOG'] as ProfileTab[]).map(tab => (
+            <div className="ppage__tabs ppage__flex-wrap">
+                {(['OVERVIEW', 'ABILITIES', 'EQUIPMENT', 'BACKSTORY', 'MEMORY LOG', 'JOURNAL'] as ProfileTab[]).map(tab => (
                     <button key={tab} onClick={() => setActiveTab(tab)}
                         className={`ppage__tab ${activeTab === tab ? 'ppage__tab--active' : ''}`}>
                         [{tab}]
@@ -398,6 +514,7 @@ export const Profile: React.FC = () => {
             {activeTab === 'EQUIPMENT' && renderEquipment()}
             {activeTab === 'BACKSTORY' && renderBackstory()}
             {activeTab === 'MEMORY LOG' && renderMemoryLog()}
+            {activeTab === 'JOURNAL' && renderJournal()}
         </div>
     );
 };

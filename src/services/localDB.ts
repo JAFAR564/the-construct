@@ -1,5 +1,5 @@
 import localforage from 'localforage';
-import type { User, ChatMessage, Quest, UserSettings } from '@/types';
+import type { User, ChatMessage, Quest, UserSettings, JournalEntry } from '@/types';
 import { DEFAULT_ABILITIES } from '@/constants/abilities';
 import { STARTER_EQUIPMENT } from '@/constants/starterEquipment';
 
@@ -62,6 +62,15 @@ export async function saveQuests(quests: Quest[]): Promise<void> {
 export async function getQuests(): Promise<Quest[]> {
     const quests = await localforage.getItem<Quest[]>('construct_quests');
     return quests || [];
+}
+
+export async function saveJournal(entries: JournalEntry[]): Promise<void> {
+    await localforage.setItem('construct_journal', entries);
+}
+
+export async function getJournal(): Promise<JournalEntry[]> {
+    const journal = await localforage.getItem<JournalEntry[]>('construct_journal');
+    return journal || [];
 }
 
 export async function saveSettings(settings: UserSettings): Promise<void> {

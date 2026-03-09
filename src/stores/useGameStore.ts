@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { User, ChatMessage, Quest, StatChange } from '@/types';
+import type { User, ChatMessage, Quest, StatChange, JournalEntry } from '@/types';
 import * as db from '@/services/supabaseDB';
 import * as localDB from '@/services/localDB';
 import { supabase, isSupabaseConfigured } from '@/services/supabase';
@@ -14,6 +14,7 @@ export interface GameState {
     authId: string | null;
     messages: ChatMessage[];
     quests: Quest[];
+    journal: JournalEntry[];
     isLoading: boolean;
     error: string | null;
 
@@ -25,6 +26,12 @@ export interface GameState {
     addQuest: (quest: Quest) => void;
     updateQuest: (id: string, update: Partial<Quest>) => void;
     setQuests: (quests: Quest[]) => void;
+
+    setJournal: (entries: JournalEntry[]) => void;
+    addJournalEntry: (entry: JournalEntry) => void;
+    updateJournalEntry: (id: string, entry: Partial<JournalEntry>) => void;
+    deleteJournalEntry: (id: string) => void;
+
     applyStatChanges: (changes: StatChange[]) => void;
     clearMessages: () => void;
     setLoading: (loading: boolean) => void;
@@ -42,6 +49,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     authId: null,
     messages: [],
     quests: [],
+    journal: [],
     isLoading: false,
     error: null,
 
@@ -64,6 +72,20 @@ export const useGameStore = create<GameState>((set, get) => ({
         quests: state.quests.map(q => q.id === id ? { ...q, ...update } : q)
     })),
     setQuests: (quests) => set({ quests }),
+
+    setJournal: (entries) => set({ journal: entries }),
+    addJournalEntry: (entry) => set((state) => {
+        const sorted = [entry, ...state.journal].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        return { journal: sorted };
+    }),
+    updateJournalEntry: (id, update) => set((state) => {
+        const updated = state.journal.map(j => j.id === id ? { ...j, ...update, updatedAt: new Date().toISOString() } : j);
+        updated.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        return { journal: updated };
+    }),
+    deleteJournalEntry: (id) => set((state) => ({
+        journal: state.journal.filter(j => j.id !== id)
+    })),
 
     applyStatChanges: (changes) => set((state) => {
         if (!state.user) return state;
@@ -195,17 +217,19 @@ export const useGameStore = create<GameState>((set, get) => ({
                 if (authUser) {
                     const user = await db.getUser(authUser.id);
                     if (user) {
-                        const [messages, quests, equipment, abilities] = await Promise.all([
+                        const [messages, quests, equipment, abilities, journal] = await Promise.all([
                             db.getMessages(user.id),
                             db.getQuests(user.id),
                             db.getEquipment(user.id),
                             db.getAbilities(user.id),
+                            db.getJournal(user.id),
                         ]);
                         set({
                             user: { ...user, equipment, abilities },
                             authId: authUser.id,
                             messages,
                             quests,
+                            journal,
                         });
                         return;
                     }
@@ -216,14 +240,16 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
 
         // Fallback to localDB
-        const [user, messages, quests] = await Promise.all([
+        const [user, messages, quests, journal] = await Promise.all([
             localDB.getUser(),
             localDB.getMessages(),
-            localDB.getQuests()
+            localDB.getQuests(),
+            localDB.getJournal()
         ]);
         if (user) set({ user });
         if (messages.length > 0) set({ messages });
         if (quests.length > 0) set({ quests });
+        if (journal.length > 0) set({ journal });
     },
 
     testConnection: async () => {
@@ -246,17 +272,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     persistToDB: async () => {
-        const { user, authId, messages, quests } = get();
+        const { user, authId, messages, quests, journal } = get();
         const promises: Promise<void>[] = [];
         if (user) promises.push(db.saveUser(user, authId || undefined));
         if (messages.length > 0) promises.push(db.saveMessages(user?.id, messages));
         if (quests.length > 0) promises.push(db.saveQuests(user?.id, quests));
+        if (journal.length > 0) promises.push(db.saveJournals(user?.id, journal));
         await Promise.all(promises);
     }
 }));
 
 useGameStore.subscribe((state, prevState) => {
-    if (state.user !== prevState.user || state.messages !== prevState.messages || state.quests !== prevState.quests) {
+    if (state.user !== prevState.user || state.messages !== prevState.messages || state.quests !== prevState.quests || state.journal !== prevState.journal) {
         state.persistToDB().catch(e => console.error('Auto-persist failed:', e));
     }
 });
