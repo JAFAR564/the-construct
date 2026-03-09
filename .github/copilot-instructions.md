@@ -49,3 +49,4 @@ Domain-specific instruction sets are available in `.agents/skills/`:
 | terminal-aesthetic | CSS design system, glassmorphism |
 | offline-first | localDB, IndexedDB, sync patterns |
 | faction-theming | Faction colors, CSS vars, speech |
+| deployment-troubleshooting | Vite env vars, module evaluation crashes |

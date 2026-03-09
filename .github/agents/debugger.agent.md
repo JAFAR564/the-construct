@@ -36,6 +36,7 @@ Run for every bug report:
 4. Does it happen in all factions/themes? Test each.
 5. Does it happen with empty state (new user)? Test.
 6. Does it happen offline (no Supabase)? Test.
+7. Does the app crash on load before rendering? Check for Module Evaluation Errors caused by missing or empty environment variables.
 
 ## Skills
 
@@ -43,3 +44,4 @@ Reference these from `.agents/skills/` when relevant:
 
 - `typescript-patterns` — Type system, import rules, strict mode
 - `offline-first` — localDB, IndexedDB, sync patterns
+- `deployment-troubleshooting` — Vite env vars, module evaluation crashes
