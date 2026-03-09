@@ -250,7 +250,7 @@ export function subscribeToChannel(
                 table: 'channel_messages',
                 filter: `channel_id = eq.${channelId} `
             },
-            (payload) => onMessage(payload.new as Record<string, unknown>)
+            (payload: any) => onMessage(payload.new as Record<string, unknown>)
         )
         .subscribe();
 
