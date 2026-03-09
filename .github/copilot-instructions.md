@@ -3,11 +3,12 @@
 ## Priority Order
 
 1. **DEBUGGER** fixes must be applied BEFORE new features
-2. **ARCHITECT** implements features from PRD
-3. **GRID_OPS** handles backend changes
-4. **CONSTRUCT_OS** writes content independently
-5. **LOREKEEPER** creates lore and roleplay content independently
-6. **DEPLOYER** deploys after all changes pass build
+2. **GROWTH_STRATEGIST** defines the user features and telemetry to build
+3. **ARCHITECT** implements features from PRD and Growth plans
+4. **GRID_OPS** handles backend changes and telemetry ingestion
+5. **CONSTRUCT_OS** writes content independently
+6. **LOREKEEPER** creates lore and roleplay content independently
+7. **DEPLOYER** deploys after all changes pass build
 
 ## Handoff Protocol
 
