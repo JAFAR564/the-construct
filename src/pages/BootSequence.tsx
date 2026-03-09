@@ -25,6 +25,13 @@ export const BootSequence: React.FC = () => {
     // Check for existing auth session on mount
     useEffect(() => {
         const checkAuth = async () => {
+            const searchParams = new URLSearchParams(window.location.search);
+            const recruitId = searchParams.get('recruit');
+            if (recruitId) {
+                sessionStorage.setItem('recruitId', recruitId);
+                window.history.replaceState({}, '', '/');
+            }
+
             if (isSupabaseConfigured) {
                 try {
                     const authUser = await auth.getAuthUser();
@@ -60,8 +67,9 @@ export const BootSequence: React.FC = () => {
 
         if (!currentUser) {
             // New user — full boot sequence
+            const hasRecruit = sessionStorage.getItem('recruitId');
             setTimeout(() => setStep(1), 500);
-            setTimeout(() => setStep(2), 1500);
+            setTimeout(() => setStep(hasRecruit ? 1.5 : 2), 1500);
             setTimeout(() => setStep(3), 2500);
             setTimeout(() => setStep(4), 3500);
             setTimeout(() => setStep(5), 4500);
@@ -114,6 +122,7 @@ export const BootSequence: React.FC = () => {
                 {step >= 1 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="CONSTRUCT OS v3.0.1" speed={20} /></div>}
                 {!displayUser ? (
                     <>
+                        {step >= 1.5 && step < 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="⚠ INCOMING CONNECTION FROM AGENT. INITIALIZING SUPPORT ROUTINES..." speed={20} /></div>}
                         {step >= 2 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="INITIALIZING KERNEL..." speed={20} /></div>}
                         {step >= 3 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="LOADING MEMORY BANKS... [OK]" speed={20} /></div>}
                         {step >= 4 && <div style={{ display: 'block', marginBottom: 8 }}><TypewriterText text="SCANNING NEURAL INTERFACE... [OK]" speed={20} /></div>}

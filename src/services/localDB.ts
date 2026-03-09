@@ -45,6 +45,15 @@ export async function getUser(): Promise<User | null> {
     return user ? migrateUser(user) : null;
 }
 
+export async function handleRecruitReward(senderId: string): Promise<void> {
+    const user = await getUser();
+    // For local fallback testing, if sender matches current user
+    if (user && user.id === senderId) {
+        user.prestige = (user.prestige || 0) + 50;
+        await saveUser(user);
+    }
+}
+
 export async function saveMessages(messages: ChatMessage[]): Promise<void> {
     const trimmed = messages.slice(-200);
     await localforage.setItem('construct_messages', trimmed);

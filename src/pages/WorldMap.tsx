@@ -136,6 +136,21 @@ export const WorldMap: React.FC = () => {
         }, 3000);
     };
 
+    const handleDeployBeacon = () => {
+        if (!selectedSector || isActing || !user) return;
+        setIsActing(true);
+        const url = new URL('/api/beacon', window.location.origin);
+        url.searchParams.set('uid', user.id);
+        url.searchParams.set('name', user.designation);
+        url.searchParams.set('faction', user.faction);
+        url.searchParams.set('sector', selectedSector.name);
+
+        navigator.clipboard.writeText(url.toString())
+            .then(() => setActionMessage(`📡 DISTRESS BEACON DEPLOYED. Link copied to clipboard. Broadcast it to local comms to recruit reinforcements.`))
+            .catch(() => setActionMessage('❌ ERROR: Could not copy link to clipboard.'))
+            .finally(() => setIsActing(false));
+    };
+
     const isAdjacent = (sectorId: number) => playerSector?.adjacentSectors.includes(sectorId) || false;
 
     return (
@@ -165,6 +180,7 @@ export const WorldMap: React.FC = () => {
                     isScouted={isScouted(selectedSector.id)} isActing={isActing}
                     scoutReport={scoutReport} actionMessage={actionMessage}
                     onScout={handleScout} onTravel={handleTravel} onClaim={handleClaim}
+                    onDeployBeacon={handleDeployBeacon}
                     onClose={() => { setSelectedSectorId(null); setScoutReport(null); setActionMessage(null); }} />
             )}
 
@@ -252,13 +268,13 @@ const SectorCell: React.FC<SectorCellProps> = ({ sector, isPlayerHere, isSelecte
 interface SectorDetailPanelProps {
     sector: Sector; isPlayerHere: boolean; isAdjacent: boolean; isContested: boolean;
     isScouted: boolean; isActing: boolean; scoutReport: string | null; actionMessage: string | null;
-    onScout: () => void; onTravel: () => void; onClaim: () => void; onClose: () => void;
+    onScout: () => void; onTravel: () => void; onClaim: () => void; onDeployBeacon: () => void; onClose: () => void;
 }
 
 const SectorDetailPanel: React.FC<SectorDetailPanelProps> = ({
     sector, isPlayerHere, isAdjacent, isContested,
     isScouted, isActing, scoutReport, actionMessage,
-    onScout, onTravel, onClaim, onClose,
+    onScout, onTravel, onClaim, onDeployBeacon, onClose,
 }) => {
     const faction = FACTIONS.find(f => f.id === sector.controlledBy);
     const fColor = faction ? faction.color : 'var(--text-muted)';
@@ -382,6 +398,11 @@ const SectorDetailPanel: React.FC<SectorDetailPanelProps> = ({
                         onClick={onClaim} disabled={isActing || !isContested || (!isAdjacent && !isPlayerHere)}
                         title={!isContested ? 'Not contested' : 'Claim for your faction'}>[C] CLAIM</button>
                     <button className="ppage__btn" onClick={onClose}>[X] CLOSE</button>
+                    {isPlayerHere && (
+                        <button className="ppage__btn ppage__btn--primary-solid" onClick={onDeployBeacon} disabled={isActing} title="Broadcast beacon to recruit" style={{ marginLeft: 'auto' }}>
+                            [B] DEPLOY BEACON
+                        </button>
+                    )}
                 </div>
                 {isActing && <div className="ppage__muted" style={{ marginTop: 6 }}>⏳ Processing...</div>}
             </div>

@@ -43,6 +43,36 @@ export async function saveUser(user: User, authId?: string): Promise<void> {
     }
 }
 
+export async function handleRecruitReward(senderId: string): Promise<void> {
+    if (!isSupabaseConfigured) {
+        await localDB.handleRecruitReward(senderId);
+        return;
+    }
+
+    // Try to fetch the sender's current prestige
+    const { data: user, error: fetchErr } = await supabase
+        .from('users')
+        .select('prestige')
+        .eq('id', senderId)
+        .single();
+
+    if (fetchErr || !user) {
+        console.error('[SupabaseDB] Failed to fetch recruiter:', fetchErr);
+        return;
+    }
+
+    // Update the prestige
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateErr } = await supabase
+        .from('users')
+        .update({ prestige: user.prestige + 50 } as any)
+        .eq('id', senderId);
+
+    if (updateErr) {
+        console.error('[SupabaseDB] Failed to reward recruiter:', updateErr);
+    }
+}
+
 // ── MESSAGES ──
 
 export async function getMessages(userId?: string, limit = 50): Promise<ChatMessage[]> {

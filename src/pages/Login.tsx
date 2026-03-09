@@ -196,6 +196,13 @@ export const Login: React.FC = () => {
             setAuthId(authUserId);
         }
 
+        // Apply recruiter logic if present
+        const storedRecruitId = sessionStorage.getItem('recruitId');
+        if (storedRecruitId) {
+            db.handleRecruitReward(storedRecruitId).catch(console.error);
+            sessionStorage.removeItem('recruitId');
+        }
+
         setUser(newUser);
         navigate('/terminal');
     };
