@@ -33,8 +33,10 @@ Run for every bug report:
 4. Does it happen in all factions/themes? Test each.
 5. Does it happen with empty state (new user)? Test.
 6. Does it happen offline (no Supabase)? Test.
+7. Does the app crash on load before rendering? Check for Module Evaluation Errors caused by missing or empty environment variables.
 
 ## Relevant Skills
 
 - [typescript-patterns](../skills/typescript-patterns/SKILL.md)
 - [offline-first](../skills/offline-first/SKILL.md)
+- [deployment-troubleshooting](../skills/deployment-troubleshooting/SKILL.md)
