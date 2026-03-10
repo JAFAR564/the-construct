@@ -21,12 +21,15 @@ export default function handler(req, res) {
         <title>Distress Beacon - The Construct</title>
         <meta property="og:title" content="Distress Beacon Deployed!" />
         <meta property="og:description" content="Click to assist ${name} and earn Prestige in The Construct." />
-        <meta property="og:image" content="${imageUrl}" />
+        <meta property="og:image" content="${imageUrl.replace(/&/g, '&amp;')}" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:type" content="website" />
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:title" content="Distress Beacon Deployed!" />
         <meta property="twitter:description" content="Click to assist ${name} and earn Prestige in The Construct." />
-        <meta property="twitter:image" content="${imageUrl}" />
+        <meta property="twitter:image" content="${imageUrl.replace(/&/g, '&amp;')}" />
         <script>
           window.location.href = "/?recruit=" + encodeURIComponent("${uid}");
         </script>
