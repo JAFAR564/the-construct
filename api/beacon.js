@@ -1,20 +1,20 @@
 export default function handler(req, res) {
-    const { uid, name = 'UNKNOWN', faction = 'TECHNOCRATS', sector = '0' } = req.query;
+  const { uid, name = 'UNKNOWN', faction = 'TECHNOCRATS', sector = '0' } = req.query;
 
-    if (!uid) {
-        return res.redirect('/');
-    }
+  if (!uid) {
+    return res.redirect('/');
+  }
 
-    // Build text for dynamic OG Image using placehold.co
-    const line1 = `WARNING: ARCHITECT [${name}]`;
-    const line2 = `IS PINNED IN SECTOR [${sector}]`;
-    const line3 = `${faction} REINFORCEMENTS REQ.`;
-    const placeholdText = encodeURIComponent(`${line1}\n${line2}\n${line3}`);
+  // Build text for dynamic OG Image using placehold.co
+  const line1 = `WARNING: ARCHITECT [${name}]`;
+  const line2 = `IS PINNED IN SECTOR [${sector}]`;
+  const line3 = `${faction} REINFORCEMENTS REQ.`;
+  const placeholdText = encodeURIComponent(`${line1}\n${line2}\n${line3}`);
 
-    // Use a hacker green terminal color schema
-    const imageUrl = `https://placehold.co/1200x630/0A0A0A/00ff00/png?text=${placeholdText}&font=Share+Tech+Mono`;
+  // Use a hacker green terminal color schema
+  const imageUrl = `https://placehold.co/1200x630/0A0A0A/00ff00.png?text=${placeholdText}&font=Share+Tech+Mono`;
 
-    const html = `
+  const html = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -39,6 +39,6 @@ export default function handler(req, res) {
     </html>
   `;
 
-    res.setHeader('Content-Type', 'text/html');
-    res.status(200).send(html);
+  res.setHeader('Content-Type', 'text/html');
+  res.status(200).send(html);
 }
