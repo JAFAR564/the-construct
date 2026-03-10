@@ -16,7 +16,7 @@ export default function handler(req, res) {
 
   const html = `
     <!DOCTYPE html>
-    <html>
+    <html prefix="og: http://ogp.me/ns#">
       <head>
         <title>Distress Beacon - The Construct</title>
         <meta property="og:title" content="Distress Beacon Deployed!" />
@@ -42,6 +42,7 @@ export default function handler(req, res) {
     </html>
   `;
 
-  res.setHeader('Content-Type', 'text/html');
+  res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.status(200).send(html);
 }
