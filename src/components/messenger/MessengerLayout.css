@@ -78,10 +78,6 @@
 }
 
 @media (min-width: 1025px) {
-    body:has(.messenger) .bottom-nav {
-        display: none;
-    }
-
     .main-content:has(.messenger) {
         padding-bottom: 8px !important;
     }
