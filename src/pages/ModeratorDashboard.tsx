@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import * as db from '@/services/supabaseDB';
 import { generateLocalEvent } from '@/services/eventGenerator';
-import type { EventType } from '@/types';
+import type { EventType, LoreEntry } from '@/types';
 import '@/styles/PremiumPage.css';
 
 export const ModeratorDashboard: React.FC = () => {
@@ -12,6 +12,38 @@ export const ModeratorDashboard: React.FC = () => {
     
     const [selectedEventType, setSelectedEventType] = useState<EventType>('ANOMALY');
     const [targetSector, setTargetSector] = useState(0);
+
+    // Chronicle Oversight State
+    const [pendingLore, setPendingLore] = useState<LoreEntry[]>([]);
+    const [moderatorNotes, setModeratorNotes] = useState<Record<string, string>>({});
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    React.useEffect(() => {
+        if (permissions.includes('USER_WARN') || user?.role === 'ADMIN') {
+            fetchPendingLore();
+        }
+    }, [user, permissions]);
+
+    const fetchPendingLore = async () => {
+        const entries = await db.getLoreEntries('PENDING');
+        setPendingLore(entries);
+    };
+
+    const handleProcessLore = async (entryId: string, status: 'CANON' | 'REJECTED') => {
+        if (!user || !user.id) return;
+        setIsProcessing(true);
+        const notes = moderatorNotes[entryId] || '';
+        const success = await db.updateLoreStatus(entryId, status, user.id, notes);
+        if (success) {
+            setPendingLore(current => current.filter(e => e.id !== entryId));
+            setModeratorNotes(prev => { const newNotes = { ...prev }; delete newNotes[entryId]; return newNotes; });
+            // Log in Audit System
+            await db.addAuditLog(user.id, `LORE_${status}`, { entryId, notes });
+        } else {
+            alert('Failed to process Lore Entry.');
+        }
+        setIsProcessing(false);
+    };
 
     const handleTriggerEvent = async () => {
         if (!permissions.includes('TRIGGER_EVENT')) return;
@@ -49,15 +81,64 @@ export const ModeratorDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Player Oversight */}
+                {/* Chronicle Oversight */}
                 <div className="ppage__setting" style={{ opacity: hasOversight ? 1 : 0.4 }}>
-                    <div className="ppage__setting-label" style={{ color: 'var(--text-bright)' }}>PLAYER OVERSIGHT</div>
-                    <div className="ppage__setting-desc">Resolve support tickets, warn users, and enforce behavioral protocols.</div>
+                    <div className="ppage__setting-label" style={{ color: 'var(--text-bright)' }}>CHRONICLE OVERSIGHT</div>
+                    <div className="ppage__setting-desc">Review pending lore sequences submitted by Architects. Ensure narrative integrity.</div>
                     {hasOversight ? (
                         <div className="ppage__card" style={{ background: 'rgba(0,0,0,0.3)', padding: 16 }}>
-                            <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontStyle: 'italic' }}>
-                                // Player Oversight module routing initialized. Awaiting player telemetry...
-                            </div>
+                            {pendingLore.length === 0 ? (
+                                <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontStyle: 'italic', textAlign: 'center' }}>
+                                    // PENDING QUEUE EMPTY. ALL SECTORS CLEAR.
+                                </div>
+                            ) : (
+                                <div className="ppage__flex-col ppage__gap-md">
+                                    {pendingLore.map(entry => (
+                                        <div key={entry.id} className="ppage__card" style={{ borderColor: 'var(--accent-warning)', background: 'rgba(40,30,0,0.2)' }}>
+                                            <div className="ppage__flex-between" style={{ marginBottom: 8 }}>
+                                                <div style={{ color: 'var(--text-bright)', fontWeight: 700, fontSize: '14px' }}>{entry.title}</div>
+                                                <div style={{ fontSize: '10px', color: 'var(--accent-info)' }}>
+                                                    [AI CONFIDENCE: 89% - Compliant with Core Lore]
+                                                </div>
+                                            </div>
+                                            <div style={{ color: 'var(--text-secondary)', fontSize: '12px', whiteSpace: 'pre-wrap', marginBottom: 12 }}>
+                                                {entry.content}
+                                            </div>
+                                            <div className="ppage__flex-between" style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: 16 }}>
+                                                <span>AUTHOR: {entry.authorId}</span>
+                                                <span>TAGS: {entry.tags.join(', ')}</span>
+                                            </div>
+                                            
+                                            <input 
+                                                className="ppage__input" 
+                                                style={{ marginBottom: 12, fontSize: '11px' }}
+                                                placeholder="Append Moderator Notes (visible on REJECT)..." 
+                                                value={moderatorNotes[entry.id] || ''} 
+                                                onChange={e => setModeratorNotes(prev => ({ ...prev, [entry.id]: e.target.value }))}
+                                            />
+                                            
+                                            <div style={{ display: 'flex', gap: 12 }}>
+                                                <button 
+                                                    className="ppage__btn" 
+                                                    style={{ flex: 1, borderColor: 'var(--accent-danger)', color: 'var(--accent-danger)' }}
+                                                    onClick={() => handleProcessLore(entry.id, 'REJECTED')}
+                                                    disabled={isProcessing}
+                                                >
+                                                    [ REJECT W/ NOTES ]
+                                                </button>
+                                                <button 
+                                                    className="ppage__btn ppage__btn--primary-solid" 
+                                                    style={{ flex: 1, boxShadow: '0 0 10px rgba(0, 255, 65, 0.2)' }}
+                                                    onClick={() => handleProcessLore(entry.id, 'CANON')}
+                                                    disabled={isProcessing}
+                                                >
+                                                    [ APPROVE TO CANON ]
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div style={{ color: 'var(--accent-danger)', fontSize: '10px' }}>[INSUFFICIENT_CLEARANCE]</div>

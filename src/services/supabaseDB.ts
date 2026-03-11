@@ -4,7 +4,7 @@ import type {
     User, ChatMessage, Quest, Equipment, Ability, JournalEntry,
     CoreSkill, Faction, Rank, ElementalAffinity, Alignment,
     EquipmentSlot, Rarity, AbilityCategory, QuestType, QuestStatus, QuestDifficulty,
-    LoreEntry, WorldEvent, Classification, ClearanceLevel, EventType,
+    LoreEntry, LoreStatus, WorldEvent, Classification, ClearanceLevel, EventType,
     UserRole, AuditLog
 } from '@/types';
 
@@ -397,18 +397,70 @@ export function subscribeToChannel(
 
 // ── LORE ENTRIES ──
 
-export async function getLoreEntries(canonOnly = true): Promise<LoreEntry[]> {
+export async function getLoreEntries(status?: LoreStatus): Promise<LoreEntry[]> {
     if (!isSupabaseConfigured) return [];
 
     let query = supabase.from('lore_entries').select('*');
-    if (canonOnly) {
-        query = query.eq('status_canon', true);
+    if (status) {
+        query = query.eq('status', status);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error || !data) return [];
     return data.map(mapDbLoreEntryToLoreEntry);
+}
+
+export async function submitLoreEntry(entry: Partial<LoreEntry>): Promise<LoreEntry | null> {
+    if (!isSupabaseConfigured) return null;
+
+    const payload = {
+        title: entry.title,
+        content: entry.content,
+        author_id: entry.authorId,
+        status: entry.status || 'PENDING',
+        classification: entry.classification,
+        clearance_level: entry.clearanceLevel || 'INITIATE',
+        tags: entry.tags || [],
+        upvotes: 0,
+        moderator_notes: '',
+        reviewed_by: null,
+    };
+
+    const { data, error } = await supabase
+        .from('lore_entries')
+        .insert([payload])
+        .select()
+        .single();
+
+    if (error || !data) {
+        console.error('[SupabaseDB] Failed to submit lore:', error);
+        return null;
+    }
+    return mapDbLoreEntryToLoreEntry(data);
+}
+
+export async function updateLoreStatus(entryId: string, status: LoreStatus, reviewerId: string, notes?: string): Promise<boolean> {
+    if (!isSupabaseConfigured) return false;
+
+    const updatePayload: Record<string, any> = {
+        status,
+        reviewed_by: reviewerId,
+    };
+    if (notes !== undefined) {
+        updatePayload.moderator_notes = notes;
+    }
+
+    const { error } = await supabase
+        .from('lore_entries')
+        .update(updatePayload)
+        .eq('id', entryId);
+
+    if (error) {
+        console.error('[SupabaseDB] Failed to update lore status:', error);
+        return false;
+    }
+    return true;
 }
 
 // ── WORLD EVENTS ──
@@ -615,13 +667,16 @@ function mapDbLoreEntryToLoreEntry(row: Record<string, unknown>): LoreEntry {
         title: row.title as string,
         content: row.content as string,
         authorId: row.author_id as string | null,
-        statusCanon: row.status_canon as boolean,
+        status: (row.status as LoreStatus) || 'PENDING',
         classification: row.classification as Classification,
         clearanceLevel: row.clearance_level as ClearanceLevel,
         tags: (row.tags as string[]) || [],
         upvotes: row.upvotes as number,
+        moderatorNotes: (row.moderator_notes as string) || undefined,
+        reviewedBy: (row.reviewed_by as string) || undefined,
         createdAt: row.created_at as string,
         updatedAt: row.updated_at as string,
+        auditLogs: (row.audit_logs as string[]) || [],
     };
 }
 
