@@ -676,7 +676,6 @@ function mapDbLoreEntryToLoreEntry(row: Record<string, unknown>): LoreEntry {
         reviewedBy: (row.reviewed_by as string) || undefined,
         createdAt: row.created_at as string,
         updatedAt: row.updated_at as string,
-        auditLogs: (row.audit_logs as string[]) || [],
     };
 }
 

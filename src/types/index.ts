@@ -264,6 +264,7 @@ export interface LeaderboardEntry {
 // === LORE AND EVENTS SYSTEM ===
 
 export type Classification = 'FACTION_INTEL' | 'SECTOR_REPORT' | 'HISTORICAL_RECORD' | 'ANOMALY_LOG' | 'NPC_DOSSIER';
+export type ClearanceLevel = 'INITIATE' | 'OPERATIVE' | 'SENTINEL' | 'SOVEREIGN';
 export type EventType = 'ANOMALY' | 'FACTION_WAR' | 'INVASION' | 'DISCOVERY';
 
 export type LoreStatus = 'DRAFT' | 'PENDING' | 'REJECTED' | 'CANON';
@@ -282,10 +283,7 @@ export interface LoreEntry {
   reviewedBy?: string;
   createdAt: string;
   updatedAt: string;
-  auditLogs: string[];
 }
-
-export type EventType = 'ANOMALY' | 'FACTION_WAR' | 'INVASION' | 'DISCOVERY';
 
 export interface WorldEvent {
   id: string;
