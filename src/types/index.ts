@@ -2,6 +2,8 @@ export type Faction = 'TECHNOCRATS' | 'KEEPERS_OF_THE_VEIL' | 'IRONBORN_COLLECTI
 
 export type Rank = 'INITIATE' | 'OPERATIVE' | 'SPECIALIST' | 'SENTINEL' | 'WARDEN' | 'COMMANDER' | 'OVERLORD' | 'SOVEREIGN';
 
+export type UserRole = 'PLAYER' | 'MODERATOR' | 'ADMIN';
+
 export type CoreSkill = 'HACKING' | 'COMBAT' | 'DIPLOMACY' | 'SURVIVAL' | 'ARCANA' | 'ENGINEERING';
 
 export type ElementalAffinity = 'FIRE' | 'ICE' | 'LIGHTNING' | 'VOID' | 'NATURE' | 'CHRONO';
@@ -104,6 +106,8 @@ export interface User {
   designation: string;
   faction: Faction;
   rank: Rank;
+  role?: UserRole;
+  permissions?: string[];
   prestige: number;
   xp: number;
   xpToNextRank: number;
@@ -257,6 +261,39 @@ export interface LeaderboardEntry {
   isCurrentUser: boolean;
 }
 
+// === LORE AND EVENTS SYSTEM ===
+
+export type Classification = 'FACTION_INTEL' | 'SECTOR_REPORT' | 'HISTORICAL_RECORD' | 'ANOMALY_LOG' | 'NPC_DOSSIER';
+export type ClearanceLevel = 'INITIATE' | 'OPERATIVE' | 'SENTINEL' | 'SOVEREIGN';
+
+export interface LoreEntry {
+  id: string;
+  title: string;
+  content: string;
+  authorId: string | null;
+  statusCanon: boolean;
+  classification: Classification;
+  clearanceLevel: ClearanceLevel;
+  tags: string[];
+  upvotes: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EventType = 'ANOMALY' | 'FACTION_WAR' | 'INVASION' | 'DISCOVERY';
+
+export interface WorldEvent {
+  id: string;
+  title: string;
+  description: string;
+  threatLevel: number;
+  activeSectors: number[];
+  isActive: boolean;
+  eventType: EventType;
+  createdAt: string;
+  resolvedAt?: string;
+}
+
 // === CHAT CHANNELS ===
 
 export type ChannelType = 'general' | 'combat' | 'roleplay' | 'announcements' | 'whisper';
@@ -334,4 +371,14 @@ export interface CombatAction {
   aiAnalysis?: string;
   damage?: number;
   statUsed?: CoreSkill;
+}
+
+export interface AuditLog {
+  id: string;
+  actorId: string;
+  targetId?: string | null;
+  actionType: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  details: Record<string, any>;
+  createdAt: string;
 }

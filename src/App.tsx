@@ -11,6 +11,10 @@ import { WorldMap } from '@/pages/WorldMap';
 import { Leaderboard } from '@/pages/Leaderboard';
 import { Settings } from '@/pages/Settings';
 import { FactionHub } from '@/pages/FactionHub';
+import { Codex } from '@/pages/Codex';
+import { RequireRole } from '@/components/auth/RequireRole';
+import { AdminDashboard } from '@/pages/AdminDashboard';
+import { ModeratorDashboard } from '@/pages/ModeratorDashboard';
 
 function App() {
   return (
@@ -49,6 +53,11 @@ function App() {
                   <FactionHub />
                 </ErrorBoundary>
               } />
+              <Route path="/codex" element={
+                <ErrorBoundary>
+                  <Codex />
+                </ErrorBoundary>
+              } />
               <Route path="/ranks" element={
                 <ErrorBoundary>
                   <Leaderboard />
@@ -59,6 +68,15 @@ function App() {
                   <Settings />
                 </ErrorBoundary>
               } />
+
+              {/* Secure Dashboard Routes */}
+              <Route element={<RequireRole allowedRoles={['ADMIN']} />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
+              </Route>
+              
+              <Route element={<RequireRole allowedRoles={['ADMIN', 'MODERATOR']} />}>
+                  <Route path="/moderator" element={<ModeratorDashboard />} />
+              </Route>
             </Route>
           </Route>
 

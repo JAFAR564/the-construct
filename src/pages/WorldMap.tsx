@@ -222,10 +222,12 @@ interface SectorCellProps {
 }
 
 const SectorCell: React.FC<SectorCellProps> = ({ sector, isPlayerHere, isSelected, onClick }) => {
+    const activeGlobalEvents = useGameStore(state => state.activeEvents).filter(e => e.activeSectors.includes(sector.id));
     const faction = FACTIONS.find(f => f.id === sector.controlledBy);
     const fColor = faction ? faction.color : 'var(--text-muted)';
     const isContested = !sector.controlledBy;
     const abbr = sector.name.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase();
+    const hasEvents = sector.activeEvents.length > 0 || activeGlobalEvents.length > 0;
 
     if (!sector.discovered) {
         return (
@@ -252,7 +254,7 @@ const SectorCell: React.FC<SectorCellProps> = ({ sector, isPlayerHere, isSelecte
         }}>
             <span style={{ position: 'absolute', top: 1, left: 2, fontSize: '8px', lineHeight: 1 }}>{WEATHER_ICONS[sector.weather] || ''}</span>
             <span style={{ position: 'absolute', top: 3, right: 3, width: 5, height: 5, borderRadius: '50%', backgroundColor: THREAT_COLOR(sector.threatLevel), display: 'inline-block' }} />
-            {sector.activeEvents.length > 0 && <span style={{ position: 'absolute', bottom: 1, left: 2, fontSize: '8px', color: 'var(--accent-warning)', animation: 'pulse 1.5s infinite' }}>!</span>}
+            {hasEvents && <span style={{ position: 'absolute', bottom: 1, left: 2, fontSize: '8px', color: 'var(--accent-warning)', animation: 'pulse 1.5s infinite' }}>!</span>}
             {isPlayerHere && <span style={{ position: 'absolute', bottom: 1, right: 2, fontSize: '7px', color: 'var(--faction-active)', fontWeight: 'bold' }}>[&gt;&gt;]</span>}
             <div style={{ fontSize: '7px', color: fColor, lineHeight: 1 }}>{sector.controlledBy ? sector.controlledBy.substring(0, 2) : '??'}</div>
             <div style={{ fontSize: '11px', fontWeight: 'bold', lineHeight: 1.1, color: isPlayerHere ? 'var(--faction-active)' : 'var(--text-primary)' }}>S{String(sector.id).padStart(2, '0')}</div>
@@ -276,6 +278,7 @@ const SectorDetailPanel: React.FC<SectorDetailPanelProps> = ({
     isScouted, isActing, scoutReport, actionMessage,
     onScout, onTravel, onClaim, onDeployBeacon, onClose,
 }) => {
+    const activeGlobalEvents = useGameStore(state => state.activeEvents).filter(e => e.activeSectors.includes(sector.id));
     const faction = FACTIONS.find(f => f.id === sector.controlledBy);
     const fColor = faction ? faction.color : 'var(--text-muted)';
     const tColor = THREAT_COLOR(sector.threatLevel);
@@ -358,10 +361,11 @@ const SectorDetailPanel: React.FC<SectorDetailPanelProps> = ({
             )}
 
             {/* Active Events */}
-            {sector.activeEvents.length > 0 && (
+            {(sector.activeEvents.length > 0 || activeGlobalEvents.length > 0) && (
                 <div style={{ marginTop: 14 }}>
                     <h3 className="ppage__section" style={{ color: 'var(--accent-warning)' }}>ACTIVE EVENTS</h3>
-                    {sector.activeEvents.map(ev => <div key={ev} style={{ fontSize: '11px', color: 'var(--accent-warning)', paddingLeft: 8 }}>⚡ {ev}</div>)}
+                    {sector.activeEvents.map(ev => <div key={ev} style={{ fontSize: '11px', color: 'var(--text-secondary)', paddingLeft: 8 }}>• {ev}</div>)}
+                    {activeGlobalEvents.map(ev => <div key={ev.id} style={{ fontSize: '11px', color: 'var(--accent-warning)', paddingLeft: 8 }}>⚡ {ev.title}</div>)}
                 </div>
             )}
 

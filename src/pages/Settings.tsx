@@ -34,6 +34,14 @@ export const Settings: React.FC = () => {
         window.location.href = '/';
     };
 
+    const handleClaimAdmin = () => {
+        updateUser({
+            role: 'ADMIN',
+            permissions: ['USER_WARN', 'USER_MUTE', 'USER_BAN', 'READ_ALL_CHATS', 'TRIGGER_EVENT', 'GRANT_QUEST', 'MODIFY_SECTOR', 'GRANT_TITLE', 'GRANT_XP', 'GRANT_ITEM', 'MODIFY_STATS']
+        });
+        alert('SUPREME ADMIN CLEARANCE GRANTED. You now have full access to the [SYS_ADMIN] dashboard.');
+    };
+
     const handleExport = async () => {
         const data = await localDB.exportSave();
         const blob = new Blob([data], { type: 'application/json' });
@@ -163,12 +171,29 @@ export const Settings: React.FC = () => {
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 24 }}>
                     <h3 className="ppage__section">DATA MANAGEMENT</h3>
                     <div className="ppage__flex-col">
+                        {isSupabaseConfigured && (
+                            <button className="ppage__btn" style={{ borderColor: 'var(--text-primary)', color: 'var(--text-primary)' }} onClick={async (e) => {
+                                const btn = e.currentTarget;
+                                const originalText = btn.innerText;
+                                btn.innerText = 'SYNCING TO GRID...';
+                                await useGameStore.getState().persistToDB();
+                                btn.innerText = 'GRID SYNCHRONIZED';
+                                setTimeout(() => btn.innerText = originalText, 2000);
+                            }}>
+                                FORCE SYNC TO GRID
+                            </button>
+                        )}
                         <button className="ppage__btn" onClick={handleExport}>EXPORT SAVE DATA</button>
                         <button className="ppage__btn ppage__btn--info" onClick={() => fileInputRef.current?.click()}>IMPORT SAVE DATA</button>
                         <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".json" onChange={handleImport} />
                         <button className="ppage__btn ppage__btn--danger" onClick={handleClear}>CLEAR LOCAL DATA</button>
                         {isSupabaseConfigured && (
                             <button className="ppage__btn ppage__btn--warning" onClick={handleSignOut}>SIGN OUT</button>
+                        )}
+                        {user.role !== 'ADMIN' && (
+                            <button className="ppage__btn ppage__btn--warning" style={{ borderColor: 'var(--accent-danger)', color: 'var(--accent-danger)' }} onClick={handleClaimAdmin}>
+                                [DEV] CLAIM SUPREME ADMIN
+                            </button>
                         )}
                     </div>
                 </div>

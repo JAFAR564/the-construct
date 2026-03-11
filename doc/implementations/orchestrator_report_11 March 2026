@@ -1,0 +1,65 @@
+# Workspace Orchestrator Report: Data Loss on Logout
+
+## PHASE 1 — AGENT COORDINATION
+To resolve this critical system-level issue, the following specialized workspace agents must collaborate in this order:
+1. **GRID-OPS (Backend & Database Engineer)**: To investigate and correct the failure of data transmission within [src/services/supabaseDB.ts](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts), converting the stubbed multi-row saving logic into actual array `upsert` queries to Supabase.
+2. **ARCHITECT (Lead Developer)**: To identify where state loading is bypassed during the login lifecycle within React and Zustand ([BootGuard.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx), [Login.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/pages/Login.tsx), and [useGameStore.ts](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts)) and ensure full cloud data bootstrapping.
+3. **DEBUGGER (QA & Performance Engineer)**: To verify that the new loading sequences don't introduce race conditions, guarantee offline redundancy, and ensure standard `npm run build` compilation succeeds.
+
+## PHASE 2 — ROOT CAUSE ANALYSIS
+The root cause of the data loss upon logout is a combination of two critical synchronization failures—resulting in a completely **Faux-Implemented Backend Persistence**:
+
+1. **Frontend State Not Fully Bootstrapped**: When a user logs in, [BootGuard.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx) checks auth and correctly retrieves the User profile from Supabase, but it completely skips bootstrapping the rest of the game state (Quests, Messages, Journal, Equipment, etc.) by returning early and bypassing the comprehensive [initializeFromDB()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#228-272) action in `useGameStore`.
+2. **Nullified Cloud Saves**: `useGameStore` automatically attempts to backup the user's data upon state changes using bulk saves ([saveMessages](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#116-126), [saveQuests](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#188-196)). However, in [src/services/supabaseDB.ts](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts), these bulk save functions are hardcoded to skip the Supabase insertion entirely and only write to IndexedDB (`localDB`). 
+   - A comment in the code assumes individual items are saved singly, but the singular save functions (`.saveMessage()`, `.saveQuest()`) are **never actually called** anywhere in the application.
+
+When a user logs out, [Settings.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/pages/Settings.tsx) triggers `localDB.clearAll()`, completely wiping out all stored gameplay data which, unbeknownst to the user, was never actually sent to the cloud.
+
+## PHASE 3 — DATA FLOW AUDIT
+Here is exactly where persistence breaks during the data lifecycle:
+- **Login**: [Login.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/pages/Login.tsx) fetches `db.getUser`, sets it in Zustand, and redirects to `/terminal`.
+- **Session Creation**: [BootGuard.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx) intercepts, refetches `db.getUser` from Supabase, and mounts the app.
+- **Data Retrieval (BREAK 1)**: Fails to load historical messages, quests, or journals because [BootGuard](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx#9-60) and [Login](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/pages/Login.tsx#26-416) do not trigger [initializeFromDB()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#228-272) for returning users.
+- **Gameplay Usage (BREAK 2)**: The user plays, generating quests and messages. `useGameStore`'s subscription fires [persistToDB()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#292-301). This calls `db.saveQuests(bulk)` which routes *only* to `localDB`. Supabase never receives the data arrays.
+- **Logout**: `localDB.clearAll()` wipes all local data.
+- **Next Login**: State resets, because Supabase only ever contained the baseline character profile logic.
+
+## PHASE 4 — LONG-TERM ARCHITECTURE SOLUTION
+To permanently guarantee user data persistence across sessions:
+- **Database Persistence**: Ensure all game state arrays (Messages, Quests, Journals, Equipment, Abilities) are correctly bulk-upserted to their respective Supabase tables.
+- **Batched Syncing**: Instead of abandoning bulk saves to Supabase, update [saveMessages](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#116-126), [saveQuests](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#188-196), and [saveJournals](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#237-244) in [supabaseDB.ts](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts) to execute array `upsert` queries to Supabase, effectively creating an automatic, seamless cloud-save system.
+- **Complete Bootstrapping**: Modify [BootGuard.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx) and [Login.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/pages/Login.tsx) to fully invoke `useGameStore.initializeFromDB()` when an existing user is detected, guaranteeing the entire user state restores automatically from the cloud database.
+- **Export/Import Obsolescence**: Local data export becomes purely a voluntary offline backup mechanism, rather than a required crutch.
+
+## PHASE 5 — USER DATA SAFETY
+To prevent future data loss and ensure seamless operations:
+- **Automatic Cloud Save**: Implement continuous, debounced uploads of the Zustand state directly to Supabase.
+- **Offline Merging**: Since `localDB` still exists, [initializeFromDB](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#228-272) should prioritize the cloud timestamp, merging or completely overwriting local data if the cloud save is newer.
+
+## PHASE 6 — IMPLEMENTATION PLAN
+### 1. Components to Inspect (Assigned to ARCHITECT & GRID-OPS)
+- [src/components/layout/BootGuard.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx)
+- [src/pages/Login.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/pages/Login.tsx)
+
+### 2. Files to Modify
+- **[src/components/layout/BootGuard.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx)** [ARCHITECT]: Replace the single [getUser](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#16-28) early return with a full `await initializeFromDB()` call to pull the complete payload.
+- **[src/pages/Login.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/pages/Login.tsx)** [ARCHITECT]: Remove redundant profile fetching; route the user to `/terminal` securely and let [BootGuard](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx#9-60) handle the full initialization.
+- **[src/services/supabaseDB.ts](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts)** [GRID-OPS]: Refactor [saveMessages](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#116-126), [saveQuests](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#188-196), and [saveJournals](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#237-244). Provide them with the `userId` and use Supabase's `upsert` array capability to bulk save data over the network.
+- **[src/stores/useGameStore.ts](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts)** [ARCHITECT & GRID-OPS]: Wrap [persistToDB](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#292-301) in a debounce function (e.g., executing saves only after 1-2 seconds of state inactivity) to avoid rate-limiting the Supabase API on rapid state mutations.
+
+### 3. Database Schema Changes
+No physical schema migrations are needed. Supabase's REST API natively supports passing an array of JSON objects to `.upsert()`.
+
+### 4. Authentication/Session Updates
+No changes needed. Supabase Auth tokens are persisting correctly.
+
+### 5. Frontend State Synchronization
+Ensure the loading screens cleanly block the UI until [initializeFromDB()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#228-272) fully resolves.
+
+### 6. Migration Strategy for Existing Users
+Since data was previously only saved to IndexedDB, existing users must log into their *cached browser* before logging out. Upon the next start-up the newly refactored [persistToDB()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#292-301) bulk-save logic will trigger instantly (since it reads the localDB into memory on boot), silently migrating their local data to the cloud. 
+
+## PHASE 7 — USER EXPERIENCE IMPROVEMENTS
+To increase user trust and make them feel confident their data is safe:
+- **Cloud Save Status Indicators**: Add a small dynamic indicator ("Syncing to Grid..." → "Grid Synchronized") next to the connection status in the [MainLayout.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/MainLayout.tsx) header.
+- **Explicit Cloud Action**: Provide a "Force Sync to Grid" button in [Settings.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/pages/Settings.tsx) to provide peace of mind before intentionally signing out.

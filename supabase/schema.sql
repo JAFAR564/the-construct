@@ -359,3 +359,53 @@ CREATE POLICY "Anyone can read sectors" ON sectors FOR SELECT USING (true);
 -- Combat: participants and spectators can read
 CREATE POLICY "Anyone can read combat" ON combat_sessions FOR SELECT USING (true);
 CREATE POLICY "Authenticated can create combat" ON combat_sessions FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+-- ============================
+-- LORE ENTRIES TABLE
+-- ============================
+CREATE TABLE lore_entries (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  status_canon BOOLEAN NOT NULL DEFAULT false,
+  classification TEXT NOT NULL DEFAULT 'HISTORICAL_RECORD' CHECK (classification IN ('FACTION_INTEL', 'SECTOR_REPORT', 'HISTORICAL_RECORD', 'ANOMALY_LOG', 'NPC_DOSSIER')),
+  clearance_level TEXT NOT NULL DEFAULT 'INITIATE',
+  tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+  upvotes INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_lore_entries_status ON lore_entries(status_canon, created_at DESC);
+CREATE INDEX idx_lore_entries_author ON lore_entries(author_id);
+
+-- ============================
+-- WORLD EVENTS TABLE
+-- ============================
+CREATE TABLE world_events (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  threat_level INTEGER NOT NULL DEFAULT 1 CHECK (threat_level BETWEEN 1 AND 10),
+  active_sectors INTEGER[] DEFAULT ARRAY[]::INTEGER[],
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  event_type TEXT NOT NULL DEFAULT 'ANOMALY' CHECK (event_type IN ('ANOMALY', 'FACTION_WAR', 'INVASION', 'DISCOVERY')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  resolved_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_world_events_active ON world_events(is_active);
+
+-- Enable RLS for new tables
+ALTER TABLE lore_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_events ENABLE ROW LEVEL SECURITY;
+
+-- Lore Entries policies
+CREATE POLICY "Anyone can read canon lore" ON lore_entries FOR SELECT USING (status_canon = true);
+CREATE POLICY "Authors can read their own lore" ON lore_entries FOR SELECT USING (author_id IN (SELECT id FROM users WHERE auth_id = auth.uid()));
+CREATE POLICY "Authenticated users can draft lore" ON lore_entries FOR INSERT WITH CHECK (auth.uid() IS NOT NULL AND author_id IN (SELECT id FROM users WHERE auth_id = auth.uid()));
+CREATE POLICY "Authors can update their uncanonized lore" ON lore_entries FOR UPDATE USING (author_id IN (SELECT id FROM users WHERE auth_id = auth.uid()) AND status_canon = false);
+
+-- World Events policies
+CREATE POLICY "Anyone can read active world events" ON world_events FOR SELECT USING (true);

@@ -1,0 +1,86 @@
+# RBAC & Moderator Dashboard Architecture Plan
+
+This document outlines Phase 1 of the implementation strategy for the Role-Based Access Control (RBAC) system in CONSTRUCT OS.
+
+## 1. Database Schema Updates
+
+We will leverage Supabase's native PostgreSQL features, specifically extending the existing `users` table and introducing dedicated tables for permissions and audit logging.
+
+### New Custom ENUM Types
+```sql
+CREATE TYPE user_role AS ENUM ('PLAYER', 'MODERATOR', 'ADMIN');
+```
+
+### Table: `users` (Alteration)
+- Add column `role` of type `user_role` (default: `'PLAYER'`).
+- Add column `permissions` of type `text[]` (array of specific permission flags like `['BOOST_XP', 'SPAWN_EVENT']`).
+
+### Table: `audit_logs`
+A system ledger designed to be append-only for tracing all staff actions.
+| Column | Type | Description |
+| :- | :- | :- |
+| [id](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/pages/Settings.tsx#20-21) | uuid | Primary key |
+| `actor_id` | uuid | FK to `users.id` (Who performed the action) |
+| `target_id` | uuid / null | FK to `users.id` or `world_events.id` (Who/What was affected) |
+| `action_type` | string | Normalized action identifier (e.g., `USER_BAN`, `EVENT_TRIGGER`) |
+| `details` | jsonb | Captured metadata about the action |
+| `created_at` | timestamp | When it occurred |
+
+## 2. Authentication Flow & Routing
+
+Security is enforced at two levels: edge (client-side routing) and core (Row Level Security in Supabase).
+
+1. **Client Router ([MainLayout.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/MainLayout.tsx) & [App.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/App.tsx))**: 
+   - New protected routes: `/admin` and `/moderator`.
+   - A `RequireRole` wrapper component will inspect `useGameStore().user.role`. If a `'PLAYER'` attempts access, they are instantly redirected to `/terminal` and an unauthorized access attempt is logged locally.
+2. **Backend Enforcement (RLS Policies)**:
+   - Supabase Row Level Security (RLS) policies will be updated. Only users where `auth.uid() = users.id AND users.role = 'ADMIN'` can `UPDATE` user roles or view the full `audit_logs` table.
+   - Moderators can only perform actions defined by their specific `permissions` array.
+
+## 3. Role Definitions & Boundaries
+
+### The Supreme Administrator
+- **Scope**: Absolute Control.
+- **Abilities**: Cannot be deleted or demoted. Can promote/demote any standard user to Moderator. Can assign discrete permission flags to custom Moderator profiles. Can view the global `audit_logs`. Can access all Moderator tools.
+
+### Proposed Moderator Classes
+
+Rather than generic "Moderator" roles, aligning with the narrative of CONSTRUCT OS yields the following classes determined by their `permissions` flags:
+
+1. **OVERSIGHT MODERATOR (Support / User Admin)**
+   - *Scope*: Player management and behavioral enforcement.
+   - *Flags*: `['USER_WARN', 'USER_MUTE', 'USER_BAN', 'READ_ALL_CHATS']`.
+   - *Abilities*: Resolve support tickets, monitor chat arrays for toxicity, ban malicious actors.
+
+2. **LOREKEEPER MODERATOR (Narrative / Roleplay)**
+   - *Scope*: Game world manipulation and live events.
+   - *Flags*: `['TRIGGER_EVENT', 'GRANT_QUEST', 'MODIFY_SECTOR', 'GRANT_TITLE']`.
+   - *Abilities*: Trigger real-time anomaly events, manually grant unique lore quests to active players, alter sector threat levels.
+
+3. **QUARTERMASTER MODERATOR (Economy / Balance)**
+   - *Scope*: Stat adjustment and item granting.
+   - *Flags*: `['GRANT_XP', 'GRANT_ITEM', 'MODIFY_STATS']`.
+   - *Abilities*: Reimburse players who lost items due to bugs, distribute global server-wipe compensation logic.
+
+## 4. Moderator Onboarding
+
+**The "Elevation" Protocol:**
+1. The Admin navigates to the Staff Management panel.
+2. The Admin enters an existing player's `GRID_ID` (email) or exact designation string.
+3. The Admin selects a Moderator Class (which auto-populates the correct permission flags).
+4. The Admin inputs their own `ACCESS_KEY` to confirm the elevation.
+5. The target user's `role` updates instantly in Supabase.
+6. Upon the target user's next login, [BootGuard](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx#8-58) fetches the updated profile, unlocking the `[SYS_OVERSIGHT]` terminal tabs for them.
+
+---
+
+## Proposal: 3 Premium "Creative" Features
+
+1. **The Panopticon (Real-Time Map Oversight)**
+   Instead of a boring list of active users, the Moderator dashboard features a "God Mode" view of the World Map. It visualizes the real-time movement of all active players across sectors. LOREKEEPERS can click a sector and deploy a localized hazard directly on top of a cluster of active players, turning moderation into a live Dungeon Master experience.
+
+2. **Ghost Protocol (Secure Impersonation Mode)**
+   For debugging complex player-reported issues, OVERSIGHT MODERATORS can securely copy a player's exact `useGameStore` state vector into a local sandbox. They can "play" as that user's exact clone offline, reproduce the bug without risking the live player's actual data, and log the explicit fix required. 
+
+3. **Construct OS Toxicity Subroutines (AI-Assisted Flagging)**
+   Messages sent by players are asynchronously passed to the Edge Function AI. If the AI detects malicious harassment not caught by standard profanity filters, it flags the message and automatically alters the player's internal [Alignment](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/types/index.ts#53-63) stat toward a hidden "Rogue" state, alerting OVERSIGHT MODERATORS on the dashboard for manual review.

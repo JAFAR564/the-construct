@@ -51,9 +51,7 @@ export const Login: React.FC = () => {
                 // Check if they already have a game profile
                 const existingUser = await db.getUser(authUser.id);
                 if (existingUser) {
-                    // Returning user — load profile and go straight to terminal
-                    setUser(existingUser);
-                    setAuthId(authUser.id);
+                    // Returning user — let BootGuard handle the deep load
                     navigate('/terminal');
                 } else {
                     // Authenticated but no game profile — need registration
@@ -94,8 +92,6 @@ export const Login: React.FC = () => {
             // Returning user — check for existing game profile
             const existingUser = await db.getUser(authUser.id);
             if (existingUser) {
-                setUser(existingUser);
-                setAuthId(authUser.id);
                 navigate('/terminal');
                 return;
             }
@@ -143,16 +139,31 @@ export const Login: React.FC = () => {
         const randomElt = elements[Math.floor(Math.random() * elements.length)];
         const randomSector = Math.floor(Math.random() * 50) + 1;
 
+        // Apply faction bonuses
+        const factionData = FACTIONS.find(f => f.id === faction);
+        const baseSkills = { 'HACKING': 10, 'COMBAT': 10, 'DIPLOMACY': 10, 'SURVIVAL': 10, 'ARCANA': 10, 'ENGINEERING': 10 };
+        if (factionData) {
+            factionData.skills.forEach(skill => {
+                if (baseSkills[skill] !== undefined) {
+                    baseSkills[skill] += 5;
+                }
+            });
+        }
+
+        const isAdmin = designation.toUpperCase() === 'ADMIN' || designation.toUpperCase().startsWith('ADMIN_');
+
         const newUser: User = {
             id: crypto.randomUUID(),
             designation,
             faction: faction!,
             rank: 'INITIATE',
+            role: isAdmin ? 'ADMIN' : 'PLAYER',
+            permissions: isAdmin ? ['USER_WARN', 'USER_MUTE', 'USER_BAN', 'READ_ALL_CHATS', 'TRIGGER_EVENT', 'GRANT_QUEST', 'MODIFY_SECTOR', 'GRANT_TITLE', 'GRANT_XP', 'GRANT_ITEM', 'MODIFY_STATS'] : [],
             prestige: 0,
             xp: 0,
             xpToNextRank: 500,
             currentSector: randomSector,
-            skills: { 'HACKING': 10, 'COMBAT': 10, 'DIPLOMACY': 10, 'SURVIVAL': 10, 'ARCANA': 10, 'ENGINEERING': 10 },
+            skills: baseSkills,
             primaryElement: randomElt,
             secondaryElement: null,
             titles: [],

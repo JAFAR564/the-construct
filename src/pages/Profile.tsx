@@ -163,48 +163,66 @@ export const Profile: React.FC = () => {
                 </div>
 
                 {/* Info panel */}
-                <div style={{ flex: 1, minWidth: 220 }} className="ppage__flex-col">
-                    <div style={{ fontSize: '18px', color: 'var(--faction-active)', fontWeight: 700, fontFamily: 'var(--font-ui)' }}>{user.designation || 'UNKNOWN'}</div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '10px', fontFamily: 'var(--font-mono)' }}>ID: {user.id?.split('-')[0] || '???'}</div>
-                    <div className="ppage__stat-row"><span className="ppage__stat-key">RANK</span><span className="ppage__stat-val">{user.rank || 'UNRANKED'}</span></div>
-                    <div className="ppage__stat-row"><span className="ppage__stat-key">LEVEL</span><span className="ppage__stat-val ppage__stat-val--accent">{user.level || 1}</span></div>
-                    <div className="ppage__stat-row"><span className="ppage__stat-key">FACTION</span><span className="ppage__stat-val ppage__stat-val--accent">{factionData?.name || 'UNALIGNED'}</span></div>
-                    <div className="ppage__stat-row"><span className="ppage__stat-key">SECTOR</span><span className="ppage__stat-val">S-{String(user.currentSector ?? 0).padStart(2, '0')}</span></div>
-                    <div className="ppage__stat-row"><span className="ppage__stat-key">PRESTIGE</span><span className="ppage__stat-val">{user.prestige || 0}</span></div>
-                    <div className="ppage__stat-row"><span className="ppage__stat-key">ALIGNMENT</span><span className="ppage__stat-val">{ALIGNMENT_LABELS[profile.alignment] || 'Unknown'}</span></div>
-                    <div style={{ marginTop: 6 }}>
-                        <ProgressBar label="XP" current={user.xp || 0} max={user.xpToNextRank || 100} color="var(--faction-active)" />
+                <div style={{ flex: 1, minWidth: 280 }} className="ppage__flex-col">
+                    <div className="ppage__card" style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                            <div>
+                                <div style={{ fontSize: '22px', color: 'var(--faction-active)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '1px' }}>{user.designation || 'UNKNOWN'}</div>
+                                <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>ID: {user.id?.split('-')[0] || '???'}</div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>LEVEL</div>
+                                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{user.level || 1}</div>
+                            </div>
+                        </div>
+
+                        <div className="ppage__grid-2col" style={{ marginBottom: 16 }}>
+                            <div className="ppage__stat-row"><span className="ppage__stat-key">RANK</span><span className="ppage__stat-val">{user.rank || 'UNRANKED'}</span></div>
+                            <div className="ppage__stat-row"><span className="ppage__stat-key">FACTION</span><span className="ppage__stat-val ppage__stat-val--accent">{factionData?.name || 'UNALIGNED'}</span></div>
+                            <div className="ppage__stat-row"><span className="ppage__stat-key">SECTOR</span><span className="ppage__stat-val">S-{String(user.currentSector ?? 0).padStart(2, '0')}</span></div>
+                            <div className="ppage__stat-row"><span className="ppage__stat-key">ALIGNMENT</span><span className="ppage__stat-val">{ALIGNMENT_LABELS[profile.alignment] || 'Unknown'}</span></div>
+                        </div>
+
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div className="ppage__stat-row" style={{ marginBottom: 4 }}><span className="ppage__stat-key">PRESTIGE (REP)</span><span className="ppage__stat-val" style={{ color: 'var(--accent-warning)', textShadow: '0 0 8px rgba(255,165,0,0.4)' }}>{user.prestige || 0}</span></div>
+                            <ProgressBar label={`XP: ${user.xp || 0} / ${user.xpToNextRank || 100}`} current={user.xp || 0} max={user.xpToNextRank || 100} color="var(--faction-active)" />
+                            <div style={{ fontSize: '9px', textAlign: 'right', color: 'var(--text-muted)', marginTop: 4 }}>TOTAL LIFETIME XP: {user.totalXP || 0}</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Core Skills */}
-            <div style={{ marginBottom: 24 }}>
-                <h3 className="ppage__section">CORE SKILLS</h3>
-                <div className="ppage__flex-col ppage__gap-sm" style={{ maxWidth: 500 }}>
-                    {Object.entries(user.skills || {}).map(([skill, value]) => (
-                        <ProgressBar key={skill} label={skill} current={value as number} max={100} color="var(--faction-active)" showValue />
-                    ))}
-                </div>
-            </div>
-
-            {/* Elemental Affinity */}
-            <div style={{ marginBottom: 24 }}>
-                <h3 className="ppage__section">ELEMENTAL AFFINITY</h3>
-                <div className="ppage__stat-row"><span className="ppage__stat-key">PRIMARY</span><span className="ppage__stat-val ppage__stat-val--accent">{user.primaryElement || 'NONE'}</span></div>
-                <div className="ppage__stat-row"><span className="ppage__stat-key">SECONDARY</span><span className="ppage__stat-val">{user.secondaryElement || 'NONE'}</span></div>
-            </div>
-
-            {/* Titles */}
-            <div>
-                <h3 className="ppage__section">TITLES</h3>
-                {user.titles && user.titles.length > 0 ? (
-                    <div className="ppage__flex-wrap">
-                        {user.titles.map((t, i) => <span key={i} className="ppage__tag ppage__tag--accent">◆ {t}</span>)}
+            <div className="ppage__grid-2col" style={{ alignItems: 'start' }}>
+                {/* Core Skills */}
+                <div className="ppage__card">
+                    <h3 className="ppage__section">ATTRIBUTES & SKILLS</h3>
+                    <div className="ppage__flex-col ppage__gap-sm" style={{ marginBottom: 16 }}>
+                        {Object.entries(user.skills || {}).map(([skill, value]) => (
+                            <ProgressBar key={skill} label={skill} current={value as number} max={100} color="var(--text-primary)" showValue />
+                        ))}
                     </div>
-                ) : (
-                    <div className="ppage__muted">No titles earned yet.</div>
-                )}
+                </div>
+
+                <div className="ppage__flex-col">
+                    {/* Elemental Affinity */}
+                    <div className="ppage__card">
+                        <h3 className="ppage__section">ELEMENTAL AFFINITY</h3>
+                        <div className="ppage__stat-row"><span className="ppage__stat-key">PRIMARY</span><span className="ppage__stat-val ppage__stat-val--accent" style={{ fontSize: '14px' }}>{user.primaryElement || 'NONE'}</span></div>
+                        <div className="ppage__stat-row"><span className="ppage__stat-key">SECONDARY</span><span className="ppage__stat-val">{user.secondaryElement || 'NONE'}</span></div>
+                    </div>
+
+                    {/* Titles */}
+                    <div className="ppage__card">
+                        <h3 className="ppage__section">EARNED TITLES</h3>
+                        {user.titles && user.titles.length > 0 ? (
+                            <div className="ppage__flex-wrap">
+                                {user.titles.map((t, i) => <span key={i} className="ppage__tag ppage__tag--accent">◆ {t}</span>)}
+                            </div>
+                        ) : (
+                            <div className="ppage__muted">No elite titles acquired yet.</div>
+                        )}
+                    </div>
+                </div>
             </div>
         </>
     );

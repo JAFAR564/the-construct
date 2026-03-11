@@ -4,6 +4,8 @@ import type {
     User, ChatMessage, Quest, Equipment, Ability, JournalEntry,
     CoreSkill, Faction, Rank, ElementalAffinity, Alignment,
     EquipmentSlot, Rarity, AbilityCategory, QuestType, QuestStatus, QuestDifficulty,
+    LoreEntry, WorldEvent, Classification, ClearanceLevel, EventType,
+    UserRole, AuditLog
 } from '@/types';
 
 // ============================
@@ -113,13 +115,26 @@ export async function saveMessage(userId: string | undefined, message: ChatMessa
 }
 
 export async function saveMessages(userId: string | undefined, messages: ChatMessage[]): Promise<void> {
-    if (!isSupabaseConfigured || !userId) {
+    if (!isSupabaseConfigured || !userId || messages.length === 0) {
         await localDB.saveMessages(messages);
         return;
     }
-    // For bulk save to Supabase, we skip re-inserting — individual messages
-    // are saved via saveMessage() in the addMessage flow. This function
-    // is mainly for the localDB fallback path.
+
+    const payload = messages.map(msg => ({
+        id: msg.id,
+        user_id: userId,
+        source: msg.source,
+        content: msg.content,
+        choices: msg.choices || [],
+        stat_changes: msg.statChanges || [],
+        is_glitch: msg.glitch || false,
+        created_at: msg.timestamp || new Date().toISOString(),
+    }));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await supabase.from('messages').upsert(payload as any, { onConflict: 'id' });
+    if (error) console.error('[SupabaseDB] Failed bulk save messages:', error);
+
     await localDB.saveMessages(messages);
 }
 
@@ -185,11 +200,42 @@ export async function saveQuest(userId: string | undefined, quest: Quest): Promi
 }
 
 export async function saveQuests(userId: string | undefined, quests: Quest[]): Promise<void> {
-    if (!isSupabaseConfigured || !userId) {
+    if (!isSupabaseConfigured || !userId || quests.length === 0) {
         await localDB.saveQuests(quests);
         return;
     }
-    // Individual quests are saved via saveQuest(). Bulk is localDB only.
+
+    const payload = quests.map(quest => ({
+        id: quest.id,
+        user_id: userId,
+        type: quest.type,
+        title: quest.title,
+        description: quest.description,
+        difficulty: quest.difficulty || 'MEDIUM',
+        sector: quest.sector,
+        status: quest.status,
+        current_stage: quest.currentStage,
+        total_stages: quest.totalStages,
+        rewards: quest.rewards,
+        narrative: quest.narrative || [],
+        choices: quest.choices || [],
+        quest_giver: quest.questGiver || {},
+        npcs_involved: quest.npcsInvolved || [],
+        branches: quest.branches || [],
+        alignment_shift: quest.alignmentShift || {},
+        stage_viewed: quest.stageViewed || [],
+        is_chain_quest: quest.isChainQuest,
+        chain_id: quest.chainId ?? null,
+        chain_position: quest.chainPosition ?? null,
+        fail_consequence: quest.failConsequence ?? null,
+        expires_at: quest.expiresAt ?? null,
+        completed_at: quest.completedAt ?? null,
+    }));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await supabase.from('quests').upsert(payload as any, { onConflict: 'id' });
+    if (error) console.error('[SupabaseDB] Failed bulk save quests:', error);
+
     await localDB.saveQuests(quests);
 }
 
@@ -234,11 +280,25 @@ export async function saveJournal(userId: string | undefined, entry: JournalEntr
 }
 
 export async function saveJournals(userId: string | undefined, entries: JournalEntry[]): Promise<void> {
-    if (!isSupabaseConfigured || !userId) {
+    if (!isSupabaseConfigured || !userId || entries.length === 0) {
         await localDB.saveJournal(entries);
         return;
     }
-    await localDB.saveJournal(entries); // bulk local only
+
+    const payload = entries.map(entry => ({
+        id: entry.id,
+        user_id: userId,
+        title: entry.title,
+        content: entry.content,
+        created_at: entry.createdAt,
+        updated_at: entry.updatedAt,
+    }));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await supabase.from('journal_entries').upsert(payload as any, { onConflict: 'id' });
+    if (error) console.error('[SupabaseDB] Failed bulk save journal entries:', error);
+
+    await localDB.saveJournal(entries);
 }
 
 // ── EQUIPMENT ──
@@ -335,6 +395,38 @@ export function subscribeToChannel(
     return subscription;
 }
 
+// ── LORE ENTRIES ──
+
+export async function getLoreEntries(canonOnly = true): Promise<LoreEntry[]> {
+    if (!isSupabaseConfigured) return [];
+
+    let query = supabase.from('lore_entries').select('*');
+    if (canonOnly) {
+        query = query.eq('status_canon', true);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error || !data) return [];
+    return data.map(mapDbLoreEntryToLoreEntry);
+}
+
+// ── WORLD EVENTS ──
+
+export async function getWorldEvents(activeOnly = true): Promise<WorldEvent[]> {
+    if (!isSupabaseConfigured) return [];
+
+    let query = supabase.from('world_events').select('*');
+    if (activeOnly) {
+        query = query.eq('is_active', true);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error || !data) return [];
+    return data.map(mapDbWorldEventToWorldEvent);
+}
+
 // ============================
 // MAPPERS: DB row <-> App types
 // ============================
@@ -345,6 +437,8 @@ function mapDbUserToUser(row: Record<string, unknown>): User {
         designation: row.designation as string,
         faction: row.faction as Faction,
         rank: row.rank as Rank,
+        role: (row.role as UserRole) || 'PLAYER',
+        permissions: (row.permissions as string[]) || [],
         prestige: row.prestige as number,
         xp: row.xp as number,
         xpToNextRank: row.xp_to_next_rank as number,
@@ -400,6 +494,8 @@ function mapUserToDbUser(user: User, authId?: string): Record<string, unknown> {
         designation: user.designation,
         faction: user.faction,
         rank: user.rank,
+        role: user.role || 'PLAYER',
+        permissions: user.permissions || [],
         prestige: user.prestige,
         xp: user.xp,
         xp_to_next_rank: user.xpToNextRank,
@@ -511,4 +607,93 @@ function mapDbAbilityToAbility(row: Record<string, unknown>): Ability {
         effect: row.effect as string,
         unlocked: row.unlocked as boolean,
     };
+}
+
+function mapDbLoreEntryToLoreEntry(row: Record<string, unknown>): LoreEntry {
+    return {
+        id: row.id as string,
+        title: row.title as string,
+        content: row.content as string,
+        authorId: row.author_id as string | null,
+        statusCanon: row.status_canon as boolean,
+        classification: row.classification as Classification,
+        clearanceLevel: row.clearance_level as ClearanceLevel,
+        tags: (row.tags as string[]) || [],
+        upvotes: row.upvotes as number,
+        createdAt: row.created_at as string,
+        updatedAt: row.updated_at as string,
+    };
+}
+
+function mapDbWorldEventToWorldEvent(row: Record<string, unknown>): WorldEvent {
+    return {
+        id: row.id as string,
+        title: row.title as string,
+        description: row.description as string,
+        threatLevel: row.threat_level as number,
+        activeSectors: (row.active_sectors as number[]) || [],
+        isActive: row.is_active as boolean,
+        eventType: row.event_type as EventType,
+        createdAt: row.created_at as string,
+        resolvedAt: (row.resolved_at as string) || undefined,
+    };
+}
+
+function mapDbAuditLogToAuditLog(row: Record<string, unknown>): AuditLog {
+    return {
+        id: row.id as string,
+        actorId: row.actor_id as string,
+        targetId: (row.target_id as string) || null,
+        actionType: row.action_type as string,
+        details: (row.details as Record<string, any>) || {},
+        createdAt: row.created_at as string,
+    };
+}
+
+// ── ADMIN & MODERATOR ACTIONS ──
+
+export async function updateUserRole(userId: string, role: UserRole, permissions: string[]): Promise<boolean> {
+    if (!isSupabaseConfigured) return false;
+    
+    const { error } = await supabase
+        .from('users')
+        .update({ role, permissions })
+        .eq('id', userId);
+        
+    if (error) {
+        console.error('[SupabaseDB] Failed to update user role:', error);
+        return false;
+    }
+    return true;
+}
+
+export async function addAuditLog(actorId: string, actionType: string, details: Record<string, any>, targetId?: string): Promise<void> {
+    if (!isSupabaseConfigured) return;
+    
+    const { error } = await supabase
+        .from('audit_logs')
+        .insert([{
+            actor_id: actorId,
+            action_type: actionType,
+            details,
+            target_id: targetId || null,
+        }]);
+        
+    if (error) console.error('[SupabaseDB] Failed to insert audit log:', error);
+}
+
+export async function getAuditLogs(limit = 100): Promise<AuditLog[]> {
+    if (!isSupabaseConfigured) return [];
+    
+    const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+        
+    if (error || !data) {
+        console.error('[SupabaseDB] Failed to fetch audit logs:', error);
+        return [];
+    }
+    return data.map(mapDbAuditLogToAuditLog);
 }

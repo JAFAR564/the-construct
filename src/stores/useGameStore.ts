@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { User, ChatMessage, Quest, StatChange, JournalEntry } from '@/types';
+import type { User, ChatMessage, Quest, StatChange, JournalEntry, WorldEvent } from '@/types';
 import * as db from '@/services/supabaseDB';
 import * as localDB from '@/services/localDB';
 import { supabase, isSupabaseConfigured } from '@/services/supabase';
@@ -15,6 +15,7 @@ export interface GameState {
     messages: ChatMessage[];
     quests: Quest[];
     journal: JournalEntry[];
+    activeEvents: WorldEvent[];
     isLoading: boolean;
     error: string | null;
 
@@ -31,6 +32,10 @@ export interface GameState {
     addJournalEntry: (entry: JournalEntry) => void;
     updateJournalEntry: (id: string, entry: Partial<JournalEntry>) => void;
     deleteJournalEntry: (id: string) => void;
+
+    setEvents: (events: WorldEvent[]) => void;
+    addEvent: (event: WorldEvent) => void;
+    removeEvent: (id: string) => void;
 
     applyStatChanges: (changes: StatChange[]) => void;
     clearMessages: () => void;
@@ -50,6 +55,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     messages: [],
     quests: [],
     journal: [],
+    activeEvents: [],
     isLoading: false,
     error: null,
 
@@ -85,6 +91,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     }),
     deleteJournalEntry: (id) => set((state) => ({
         journal: state.journal.filter(j => j.id !== id)
+    })),
+
+    setEvents: (events) => set({ activeEvents: events }),
+    addEvent: (event) => set((state) => {
+        if (state.activeEvents.some(e => e.id === event.id)) return state;
+        SoundManager.playNotification();
+        return { activeEvents: [event, ...state.activeEvents] };
+    }),
+    removeEvent: (id) => set((state) => ({
+        activeEvents: state.activeEvents.filter(e => e.id !== id)
     })),
 
     applyStatChanges: (changes) => set((state) => {
@@ -217,12 +233,13 @@ export const useGameStore = create<GameState>((set, get) => ({
                 if (authUser) {
                     const user = await db.getUser(authUser.id);
                     if (user) {
-                        const [messages, quests, equipment, abilities, journal] = await Promise.all([
+                        const [messages, quests, equipment, abilities, journal, worldEvents] = await Promise.all([
                             db.getMessages(user.id),
                             db.getQuests(user.id),
                             db.getEquipment(user.id),
                             db.getAbilities(user.id),
                             db.getJournal(user.id),
+                            db.getWorldEvents(true),
                         ]);
                         set({
                             user: { ...user, equipment, abilities },
@@ -230,6 +247,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                             messages,
                             quests,
                             journal,
+                            activeEvents: worldEvents || [], // world events
                         });
                         return;
                     }
@@ -282,8 +300,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 }));
 
+let saveTimeout: ReturnType<typeof setTimeout>;
 useGameStore.subscribe((state, prevState) => {
     if (state.user !== prevState.user || state.messages !== prevState.messages || state.quests !== prevState.quests || state.journal !== prevState.journal) {
-        state.persistToDB().catch(e => console.error('Auto-persist failed:', e));
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            state.persistToDB().catch(e => console.error('Auto-persist failed:', e));
+        }, 2000); // Debounce saves by 2 seconds
     }
 });

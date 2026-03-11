@@ -4,7 +4,6 @@ import { useUIStore } from '@/stores/useUIStore';
 import { useGameStore } from '@/stores/useGameStore';
 import { isSupabaseConfigured } from '@/services/supabase';
 import * as auth from '@/services/auth';
-import * as db from '@/services/supabaseDB';
 
 export const BootGuard: React.FC = () => {
     const bootComplete = useUIStore(state => state.bootComplete);
@@ -23,12 +22,11 @@ export const BootGuard: React.FC = () => {
                 try {
                     const authUser = await auth.getAuthUser();
                     if (authUser) {
-                        const dbUser = await db.getUser(authUser.id);
-                        if (dbUser) {
-                            setUser(dbUser);
-                            setLoading(false);
-                            return;
-                        }
+                        // FIX: Do not load just the user. Let the store handle the massive Promise.all
+                        // which correctly retrieves the Array chunks (Messages, Quests, Journal, etc.)
+                        await initializeFromDB();
+                        setLoading(false);
+                        return;
                     }
                 } catch (e) {
                     console.warn('[BootGuard] Supabase auth check failed:', e);
