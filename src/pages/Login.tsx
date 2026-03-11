@@ -28,8 +28,8 @@ export const Login: React.FC = () => {
     const setUser = useGameStore(state => state.setUser);
     const setAuthId = useGameStore(state => state.setAuthId);
 
-    // If Supabase isn't configured, skip auth step entirely
-    const [step, setStep] = useState<LoginStep>(isSupabaseConfigured ? 'auth' : 'designation');
+    // Default to a loading state while we check the databases so we don't flash the wrong UI
+    const [step, setStep] = useState<LoginStep>('auth_loading');
     const [mode, setMode] = useState<'signin' | 'signup'>('signup');
 
     // Auth fields
@@ -44,22 +44,38 @@ export const Login: React.FC = () => {
 
     // Check for existing session on mount
     useEffect(() => {
-        if (!isSupabaseConfigured) return;
-
-        auth.getAuthUser().then(async (authUser) => {
-            if (authUser) {
-                // Check if they already have a game profile
-                const existingUser = await db.getUser(authUser.id);
-                if (existingUser) {
-                    // Returning user — let BootGuard handle the deep load
+        const checkExistingSession = async () => {
+            if (isSupabaseConfigured) {
+                const authUser = await auth.getAuthUser();
+                if (authUser) {
+                    // Check if they already have a game profile
+                    const existingUser = await db.getUser(authUser.id);
+                    if (existingUser) {
+                        // Returning user — let BootGuard handle the deep load
+                        navigate('/terminal');
+                        return;
+                    } else {
+                        // Authenticated but no game profile — need registration
+                        setAuthUserId(authUser.id);
+                        setStep('designation');
+                        return;
+                    }
+                }
+            } else {
+                // Supabase not configured -> offline mode. Check local IndexedDB.
+                const { getUser: getLocalUser } = await import('@/services/localDB');
+                const localUser = await getLocalUser();
+                if (localUser) {
                     navigate('/terminal');
-                } else {
-                    // Authenticated but no game profile — need registration
-                    setAuthUserId(authUser.id);
-                    setStep('designation');
+                    return;
                 }
             }
-        });
+            
+            // If we get here, no user exists. Set step based on config.
+            setStep(isSupabaseConfigured ? 'auth' : 'designation');
+        };
+
+        checkExistingSession();
     }, [navigate, setUser]);
 
     // ── AUTH HANDLERS ──
