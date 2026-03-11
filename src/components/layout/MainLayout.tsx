@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Terminal, User, Map, ScrollText, Settings, Users, BookOpen } from 'lucide-react';
+import { Terminal, User, Map, ScrollText, Settings, Users, BookOpen, Trophy } from 'lucide-react';
 import { useGameStore } from '@/stores/useGameStore';
 import { useOfflineDetect } from '@/hooks/useOfflineDetect';
 import { useTheme } from '@/hooks/useTheme';
@@ -191,6 +191,10 @@ export const MainLayout: React.FC = () => {
                 <NavLink to="/codex" className={({ isActive }) => `nav-item ${isActive ? 'active' : 'inactive'}`}>
                     <BookOpen />
                     <span className="nav-label">LORE</span>
+                </NavLink>
+                <NavLink to="/ranks" className={({ isActive }) => `nav-item ${isActive ? 'active' : 'inactive'}`}>
+                    <Trophy />
+                    <span className="nav-label">RANKS</span>
                 </NavLink>
                 <NavLink to="/config" className={({ isActive }) => `nav-item ${isActive ? 'active' : 'inactive'}`}>
                     <Settings />

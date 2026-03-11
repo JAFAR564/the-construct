@@ -34,14 +34,6 @@ export const Settings: React.FC = () => {
         window.location.href = '/';
     };
 
-    const handleClaimAdmin = () => {
-        updateUser({
-            role: 'ADMIN',
-            permissions: ['USER_WARN', 'USER_MUTE', 'USER_BAN', 'READ_ALL_CHATS', 'TRIGGER_EVENT', 'GRANT_QUEST', 'MODIFY_SECTOR', 'GRANT_TITLE', 'GRANT_XP', 'GRANT_ITEM', 'MODIFY_STATS']
-        });
-        alert('SUPREME ADMIN CLEARANCE GRANTED. You now have full access to the [SYS_ADMIN] dashboard.');
-    };
-
     const handleExport = async () => {
         const data = await localDB.exportSave();
         const blob = new Blob([data], { type: 'application/json' });
@@ -189,11 +181,6 @@ export const Settings: React.FC = () => {
                         <button className="ppage__btn ppage__btn--danger" onClick={handleClear}>CLEAR LOCAL DATA</button>
                         {isSupabaseConfigured && (
                             <button className="ppage__btn ppage__btn--warning" onClick={handleSignOut}>SIGN OUT</button>
-                        )}
-                        {user.role !== 'ADMIN' && (
-                            <button className="ppage__btn ppage__btn--warning" style={{ borderColor: 'var(--accent-danger)', color: 'var(--accent-danger)' }} onClick={handleClaimAdmin}>
-                                [DEV] CLAIM SUPREME ADMIN
-                            </button>
                         )}
                     </div>
                 </div>

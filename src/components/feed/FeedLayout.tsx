@@ -6,13 +6,14 @@ import './FeedLayout.css';
 
 /* ─── Navigation items ─── */
 const NAV_ITEMS = [
-    { path: '/terminal', label: 'FEED', icon: '📡' },
-    { path: '/quests', label: 'QUESTS', icon: '📋' },
-    { path: '/world', label: 'WORLD', icon: '🗺' },
-    { path: '/faction', label: 'FACTION', icon: '⚔' },
-    { path: '/profile', label: 'PROFILE', icon: '👤' },
+    { path: '/terminal', label: 'TERM', icon: '📡' },
+    { path: '/profile', label: 'ARCH', icon: '👤' },
+    { path: '/world', label: 'GRID', icon: '🗺' },
+    { path: '/quests', label: 'DIR', icon: '📋' },
+    { path: '/faction', label: 'FAC', icon: '⚔' },
+    { path: '/codex', label: 'LORE', icon: '📖' },
     { path: '/ranks', label: 'RANKS', icon: '🏆' },
-    { path: '/config', label: 'CONFIG', icon: '⚙' },
+    { path: '/config', label: 'SYS', icon: '⚙' },
 ];
 
 /* ─── Sidebar: Profile Widget ─── */
