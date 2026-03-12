@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/client';
+import { apiClient, type APIResponse } from '@/services/client';
 import type { Quest, QuestChoice, QuestOption, User, QuestType } from '@/types';
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -691,7 +691,7 @@ export async function generateQuest(
       if (response.success && response.data?.narrative) {
         return parseAIQuest(response, user, type, sector);
       }
-    } catch (e) {
+    } catch {
       console.error('[QuestGenerator] AI generation failed, using template');
     }
   }
@@ -734,7 +734,7 @@ function generateFromTemplate(user: User, type: QuestType, sector: number): Ques
   } as Quest;
 }
 
-function parseAIQuest(response: any, user: User, type: QuestType, sector: number): Quest {
+function parseAIQuest(response: APIResponse, user: User, type: QuestType, sector: number): Quest {
   const narrative = response.data?.narrative || ['The Grid presents a challenge.'];
   const totalStages = Array.isArray(narrative) ? narrative.length : 3;
 

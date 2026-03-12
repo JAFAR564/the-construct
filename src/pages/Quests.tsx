@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { generateAvailableQuests, getDifficultyColor, generateQuestChoice, checkSkillRequirement } from '@/services/questGenerator';
@@ -21,18 +21,16 @@ export const Quests: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<QuestTab>('AVAILABLE');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [availableQuests, setAvailableQuests] = useState<Quest[]>([]);
+  const [availableQuests, setAvailableQuests] = useState<Quest[]>(() => {
+    const storeUser = useGameStore.getState().user;
+    if (storeUser) return generateAvailableQuests(storeUser, 3);
+    return [];
+  });
   const [isAdvancing, setIsAdvancing] = useState(false);
 
   const safeQuests = Array.isArray(quests) ? quests : [];
   const activeQuests = safeQuests.filter(q => q?.status === 'ACTIVE');
   const completedQuests = safeQuests.filter(q => q?.status === 'COMPLETED');
-
-  useEffect(() => {
-    if (user && availableQuests.length === 0) {
-      setAvailableQuests(generateAvailableQuests(user, 3));
-    }
-  }, [user, availableQuests.length]);
 
   const handleAcceptQuest = (quest: Quest) => {
     if (!user) return;

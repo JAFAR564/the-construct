@@ -8,7 +8,6 @@ export const isSupabaseConfigured = supabaseUrl.length > 0 && supabaseAnonKey.le
 
 // Only initialize the client if config is actually present, otherwise app crashes on boot due to module evaluation error.
 // The `isSupabaseConfigured` check throughout the app prevents accessing the null client.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const supabase = isSupabaseConfigured 
     ? createClient<Database>(supabaseUrl, supabaseAnonKey) 
-    : null as any;
+    : null as any; // eslint-disable-line @typescript-eslint/no-explicit-any

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 
 interface Particle {
@@ -25,23 +25,28 @@ export function ParticleBackground() {
     const frameRef = useRef<number | undefined>(undefined);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+    // Initialize particles when theme changes
+    const initParticles = useCallback(() => {
         const chars = PARTICLE_CHARS[theme.particleType] || PARTICLE_CHARS.runes;
-        const count = 25; // Keep it subtle
-
-        // Initialize particles
-        const initial: Particle[] = Array.from({ length: count }, (_, i) => ({
+        const count = 25;
+        return Array.from({ length: count }, (_, i) => ({
             id: i,
             x: Math.random() * 100,
             y: Math.random() * 100,
             char: chars[Math.floor(Math.random() * chars.length)],
-            opacity: Math.random() * 0.15 + 0.03, // Very subtle: 0.03 to 0.18
+            opacity: Math.random() * 0.15 + 0.03,
             speed: Math.random() * 0.3 + 0.1,
             size: Math.random() * 6 + 10,
         }));
-        setParticles(initial);
+    }, [theme.particleType]);
 
-        // Animation loop
+    // Re-initialize when particle type changes
+    useEffect(() => {
+        setParticles(initParticles());
+    }, [initParticles]);
+
+    // Animation loop (separate effect)
+    useEffect(() => {
         let lastTime = Date.now();
         const animate = () => {
             const now = Date.now();

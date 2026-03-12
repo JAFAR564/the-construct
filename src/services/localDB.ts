@@ -105,7 +105,7 @@ export async function clearAll(): Promise<void> {
 
 export async function exportSave(): Promise<string> {
     const keys = await localforage.keys();
-    const data: Record<string, any> = {};
+    const data: Record<string, unknown> = {};
     for (const key of keys) {
         data[key] = await localforage.getItem(key);
     }

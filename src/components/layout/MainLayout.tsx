@@ -36,7 +36,7 @@ export const MainLayout: React.FC = () => {
                 SoundManager.stopAmbient();
             }
         };
-    }, [user?.settings?.ambientEnabled, user?.faction]);
+    }, [user, user?.settings?.ambientEnabled, user?.settings?.ambientVolume, user?.faction]);
 
     // Active World Events & Realtime Subscription
     const activeEvents = useGameStore(state => state.activeEvents);
@@ -47,12 +47,12 @@ export const MainLayout: React.FC = () => {
         if (!user) return;
 
         let interval: ReturnType<typeof setInterval>;
-        let channel: any;
+        let channel: unknown;
 
         if (isSupabaseConfigured) {
             // Subscribe to real-time World Event insertions from Supabase
             channel = supabase.channel('public:world_events')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'world_events' }, (payload: any) => {
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'world_events' }, (payload: Record<string, unknown>) => {
                     const newEvent = payload.new as WorldEvent;
                     if (newEvent.isActive) {
                         addEvent(newEvent);
@@ -63,10 +63,11 @@ export const MainLayout: React.FC = () => {
                 .subscribe();
         } else {
             // Offline/Fallback mode: randomly generate events every few minutes
+            const currentSector = user.currentSector;
             interval = setInterval(() => {
                 // 10% chance every 2 minutes
                 if (Math.random() < 0.1) {
-                    const localEvent = generateLocalEvent(user.currentSector ? [user.currentSector] : []);
+                    const localEvent = generateLocalEvent(currentSector ? [currentSector] : []);
                     addEvent(localEvent);
                     setTimeout(() => removeEvent(localEvent.id), 10000);
                 }
@@ -77,7 +78,7 @@ export const MainLayout: React.FC = () => {
             if (interval) clearInterval(interval);
             if (channel) supabase.removeChannel(channel);
         };
-    }, [user, addEvent, removeEvent]);
+    }, [user, user?.id, user?.currentSector, addEvent, removeEvent]);
 
     if (!user) return null;
 

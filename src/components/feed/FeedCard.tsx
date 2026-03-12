@@ -103,7 +103,7 @@ interface QuestDecisionCardProps {
   onChoose: (choiceId: string, optionId: string) => void;
 }
 
-interface LoadingCardProps {}
+type LoadingCardProps = Record<string, never>;
 
 /* ────────── Main Feed Card ────────── */
 export const FeedCard: React.FC<FeedCardProps> = ({ message, onChoice, animationDelay = 0 }) => {

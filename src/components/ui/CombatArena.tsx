@@ -20,7 +20,7 @@ const ENVIRONMENTS = [
 const JUDGE_TEMPLATES = [
     (p1: string, p2: string, a1: string, a2: string) =>
         `Both combatants demonstrate tactical awareness. ${p1}'s ${a1.slice(0, 40)}... earns partial contact: ${10 + Math.floor(Math.random() * 20)} damage. ${p2}'s counter with ${a2.slice(0, 30)}... connects: ${10 + Math.floor(Math.random() * 20)} damage. Environmental conditions affect both fighters. Advantage: ${Math.random() > 0.5 ? p1 : p2}.`,
-    (p1: string, p2: string, a1: string, _a2: string) =>
+    (p1: string, p2: string, a1: string) =>
         `A decisive exchange. ${p1} presses the attack with ferocity — ${a1.slice(0, 40)}... ${Math.random() > 0.5 ? 'finds its mark' : 'glances off armor'}: ${8 + Math.floor(Math.random() * 25)} damage. ${p2} holds ground and retaliates for ${8 + Math.floor(Math.random() * 25)} damage. The environment shifts. Neither combatant yields.`,
     (p1: string, p2: string, _a1: string, a2: string) =>
         `${p2} seizes the initiative with ${a2.slice(0, 40)}... — a bold maneuver dealing ${12 + Math.floor(Math.random() * 18)} damage. ${p1} absorbs the blow and adapts, responding for ${12 + Math.floor(Math.random() * 18)} damage. The Grid crackles with energy. This bout intensifies.`,
@@ -403,6 +403,7 @@ export const CombatArena: React.FC<CombatArenaProps> = ({ channelId }) => {
 
 // ── EXPORTED HELPER: create a new combat session ──
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function createCombatSession(
     channelId: string,
     player: { userId: string; designation: string; faction: Faction },

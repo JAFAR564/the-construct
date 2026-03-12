@@ -150,7 +150,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     setError: (error) => set({ error }),
 
     sendMessage: async (content) => {
-        const { addMessage, setLoading, user, messages } = get();
+        const { addMessage, setLoading, user } = get();
 
         if (!user) return;
 
@@ -164,8 +164,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         setLoading(true);
 
         try {
-            // Get last 10 messages for context
-            const context = messages.slice(-10);
+            // Get last 10 messages for context AFTER adding user message
+            const context = get().messages.slice(-10);
 
             // Call API (will automatically fallback to local content if no endpoint or offline)
             const response = await api.chat(content, context, user);
@@ -291,11 +291,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     persistToDB: async () => {
         const { user, authId, messages, quests, journal } = get();
+        if (!user) return;
         const promises: Promise<void>[] = [];
-        if (user) promises.push(db.saveUser(user, authId || undefined));
-        if (messages.length > 0) promises.push(db.saveMessages(user?.id, messages));
-        if (quests.length > 0) promises.push(db.saveQuests(user?.id, quests));
-        if (journal.length > 0) promises.push(db.saveJournals(user?.id, journal));
+        promises.push(db.saveUser(user, authId || undefined));
+        if (messages.length > 0) promises.push(db.saveMessages(user.id, messages));
+        if (quests.length > 0) promises.push(db.saveQuests(user.id, quests));
+        if (journal.length > 0) promises.push(db.saveJournals(user.id, journal));
         await Promise.all(promises);
     }
 }));

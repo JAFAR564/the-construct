@@ -34,10 +34,9 @@ export async function saveUser(user: User, authId?: string): Promise<void> {
     }
 
     const dbUser = mapUserToDbUser(user, authId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase
         .from('users')
-        .upsert(dbUser as any, { onConflict: 'id' });
+        .upsert(dbUser as never, { onConflict: 'id' });
 
     if (error) {
         console.error('[SupabaseDB] Failed to save user:', error);
@@ -64,10 +63,9 @@ export async function handleRecruitReward(senderId: string): Promise<void> {
     }
 
     // Update the prestige
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: updateErr } = await supabase
         .from('users')
-        .update({ prestige: user.prestige + 50 } as any)
+        .update({ prestige: user.prestige + 50 } as never)
         .eq('id', senderId);
 
     if (updateErr) {
@@ -99,7 +97,6 @@ export async function saveMessage(userId: string | undefined, message: ChatMessa
         return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase
         .from('messages')
         .insert({
@@ -109,7 +106,7 @@ export async function saveMessage(userId: string | undefined, message: ChatMessa
             choices: message.choices || [],
             stat_changes: message.statChanges || [],
             is_glitch: message.glitch || false,
-        } as any);
+        } as never);
 
     if (error) console.error('[SupabaseDB] Failed to save message:', error);
 }
@@ -131,8 +128,7 @@ export async function saveMessages(userId: string | undefined, messages: ChatMes
         created_at: msg.timestamp || new Date().toISOString(),
     }));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await supabase.from('messages').upsert(payload as any, { onConflict: 'id' });
+    const { error } = await supabase.from('messages').upsert(payload as never, { onConflict: 'id' });
     if (error) console.error('[SupabaseDB] Failed bulk save messages:', error);
 
     await localDB.saveMessages(messages);
@@ -166,7 +162,6 @@ export async function saveQuest(userId: string | undefined, quest: Quest): Promi
         return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase
         .from('quests')
         .upsert({
@@ -194,7 +189,7 @@ export async function saveQuest(userId: string | undefined, quest: Quest): Promi
             fail_consequence: quest.failConsequence ?? null,
             expires_at: quest.expiresAt ?? null,
             completed_at: quest.completedAt ?? null,
-        } as any, { onConflict: 'id' });
+        } as never, { onConflict: 'id' });
 
     if (error) console.error('[SupabaseDB] Failed to save quest:', error);
 }
@@ -232,8 +227,7 @@ export async function saveQuests(userId: string | undefined, quests: Quest[]): P
         completed_at: quest.completedAt ?? null,
     }));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await supabase.from('quests').upsert(payload as any, { onConflict: 'id' });
+    const { error } = await supabase.from('quests').upsert(payload as never, { onConflict: 'id' });
     if (error) console.error('[SupabaseDB] Failed bulk save quests:', error);
 
     await localDB.saveQuests(quests);
@@ -264,7 +258,6 @@ export async function saveJournal(userId: string | undefined, entry: JournalEntr
         return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase
         .from('journal_entries')
         .upsert({
@@ -274,7 +267,7 @@ export async function saveJournal(userId: string | undefined, entry: JournalEntr
             content: entry.content,
             created_at: entry.createdAt,
             updated_at: entry.updatedAt,
-        } as any, { onConflict: 'id' });
+        } as never, { onConflict: 'id' });
 
     if (error) console.error('[SupabaseDB] Failed to save journal entry:', error);
 }
@@ -294,8 +287,7 @@ export async function saveJournals(userId: string | undefined, entries: JournalE
         updated_at: entry.updatedAt,
     }));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await supabase.from('journal_entries').upsert(payload as any, { onConflict: 'id' });
+    const { error } = await supabase.from('journal_entries').upsert(payload as never, { onConflict: 'id' });
     if (error) console.error('[SupabaseDB] Failed bulk save journal entries:', error);
 
     await localDB.saveJournal(entries);
@@ -379,16 +371,16 @@ export function subscribeToChannel(
     if (!isSupabaseConfigured) return { unsubscribe: () => { } };
 
     const subscription = supabase
-        .channel(`channel - ${channelId} `)
+        .channel(`channel-${channelId}`)
         .on(
             'postgres_changes',
             {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'channel_messages',
-                filter: `channel_id = eq.${channelId} `
+                filter: `channel_id=eq.${channelId}`
             },
-            (payload: any) => onMessage(payload.new as Record<string, unknown>)
+            (payload: Record<string, unknown>) => onMessage(payload.new as Record<string, unknown>)
         )
         .subscribe();
 
@@ -443,7 +435,7 @@ export async function submitLoreEntry(entry: Partial<LoreEntry>): Promise<LoreEn
 export async function updateLoreStatus(entryId: string, status: LoreStatus, reviewerId: string, notes?: string): Promise<boolean> {
     if (!isSupabaseConfigured) return false;
 
-    const updatePayload: Record<string, any> = {
+    const updatePayload: Record<string, unknown> = {
         status,
         reviewed_by: reviewerId,
     };
@@ -699,7 +691,7 @@ function mapDbAuditLogToAuditLog(row: Record<string, unknown>): AuditLog {
         actorId: row.actor_id as string,
         targetId: (row.target_id as string) || null,
         actionType: row.action_type as string,
-        details: (row.details as Record<string, any>) || {},
+        details: (row.details as Record<string, unknown>) || {},
         createdAt: row.created_at as string,
     };
 }
@@ -721,7 +713,7 @@ export async function updateUserRole(userId: string, role: UserRole, permissions
     return true;
 }
 
-export async function addAuditLog(actorId: string, actionType: string, details: Record<string, any>, targetId?: string): Promise<void> {
+export async function addAuditLog(actorId: string, actionType: string, details: Record<string, unknown>, targetId?: string): Promise<void> {
     if (!isSupabaseConfigured) return;
     
     const { error } = await supabase

@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from '@/services/supabase';
 interface APIRequest {
     action: 'CHAT' | 'SYNC_USER' | 'GET_LEADERBOARD' | 'GET_FACTION_STATUS' | 'GET_DAILY_QUESTS';
     userId: string;
-    payload: Record<string, any>;
+    payload: Record<string, unknown>;
 }
 
 export interface APIResponse {
@@ -20,6 +20,12 @@ export interface APIResponse {
         entries?: LeaderboardEntry[];
         factions?: FactionStatus[];
         quests?: Quest[];
+        title?: string;
+        description?: string;
+        rewards?: Quest['rewards'];
+        difficulty?: Quest['difficulty'];
+        questGiver?: Quest['questGiver'];
+        npcsInvolved?: Quest['npcsInvolved'];
     };
     meta: {
         aiModel: 'gemini' | 'groq' | 'fallback';
@@ -47,7 +53,7 @@ export class ApiClient {
     }
 
     isAvailable(): boolean {
-        return this.isConfigured;
+        return this.isConfigured || isSupabaseConfigured;
     }
 
     private async request(body: APIRequest): Promise<APIResponse> {

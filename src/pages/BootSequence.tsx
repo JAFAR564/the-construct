@@ -50,7 +50,7 @@ export const BootSequence: React.FC = () => {
             setCheckedAuth(true);
         };
         checkAuth();
-    }, [setUser]);
+    }, [setUser, setAuthId]);
 
     // Run the boot animation after auth check completes
     useEffect(() => {
@@ -92,6 +92,7 @@ export const BootSequence: React.FC = () => {
             setTimeout(() => setStep(3), 1900);
             setTimeout(() => finishBoot(currentUser), 2600);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- finishBoot/user intentionally excluded to prevent infinite loop
     }, [checkedAuth, bootSkipped, hasSession]);
 
     const finishBoot = async (currentUser: ReturnType<typeof useGameStore.getState>['user']) => {

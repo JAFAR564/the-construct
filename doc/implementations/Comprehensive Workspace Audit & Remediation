@@ -1,0 +1,132 @@
+# Comprehensive Workspace Audit & Remediation
+
+Full audit across build health, logic bugs, code quality, and UI alignment for "The Construct" — a React 19 + TypeScript 5.9 + Vite 7 + Zustand + Supabase web app.
+
+> [!IMPORTANT]
+> I cannot run terminal commands (`npm run build`, `npm run lint`) due to a workspace path validation issue with WSL. **You'll need to run the build and lint yourself** (or let me know if there's a way to fix the terminal issue) so I can capture real-time errors. The bugs below are from **static code analysis only** — there may be additional TypeScript/ESLint errors that I'll catch once I can run the build.
+
+## User Review Required
+
+> [!WARNING]
+> **BootGuard loading state bug (Bug #1)** — If Supabase is configured and auth succeeds, `loading` is set to `false`, but if it falls through to the local fallback path, the component will also call [initializeFromDB](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#228-272) a **second time** (redundantly). Additionally, if the Supabase auth path succeeds and returns, the local fallback [initializeFromDB()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#228-272) is skipped — but `loading` is only set to false inside the `if (authUser)` block, meaning if there's a Supabase-authenticated user who has no DB row yet, `loading` never gets set to `false` and the user **sees a permanent blank screen**. I plan to fix this — please confirm this is desired.
+
+> [!WARNING]
+> **`supabaseDB.subscribeToChannel` has trailing spaces in template literals** (lines 382, 389) — this causes the Supabase channel name and filter to have unintended trailing spaces, making realtime subscriptions silently fail. I'll fix this.
+
+---
+
+## Proposed Changes
+
+### Bug Fixes (Logic & Runtime)
+
+#### [MODIFY] [BootGuard.tsx](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/BootGuard.tsx)
+
+**Bug #1: Permanent blank screen when Supabase user exists but has no DB row**
+- Line 28: [setLoading(false)](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#149-150) is only called inside `if (authUser)` → `if (user)`. If a Supabase-authenticated user has no DB row yet (e.g., just signed up), `loading` never becomes `false`.
+- **Fix**: Move [setLoading(false)](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#149-150) to a `finally` block or ensure all code paths set it.
+
+---
+
+#### [MODIFY] [supabaseDB.ts](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts)
+
+**Bug #2: Trailing spaces in realtime channel subscription**
+- Line 382: `` `channel - ${channelId} ` `` has a trailing space in the channel name.
+- Line 389: `` `channel_id = eq.${channelId} ` `` has a trailing space in the filter string.
+- **Impact**: Realtime subscriptions silently fail to match any channel.
+- **Fix**: Remove trailing spaces from both template literals.
+
+---
+
+#### [MODIFY] [useGameStore.ts](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts)
+
+**Bug #3: [persistToDB](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#292-301) passes `user?.id` (which could be undefined) to [saveMessages](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#117-140)/[saveQuests](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/localDB.ts#67-70)/[saveJournals](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#282-303)**
+- Lines 296-298: `user?.id` could be `undefined`, but the Supabase save functions need a valid `userId` string to write correctly. If `user` is null, the functions fall through to localDB — but messages/quests/journal arrays get saved to localDB even when `user` is null, which is likely unintended.
+- **Fix**: Guard the entire persist block with `if (!user) return;` early.
+
+**Bug #4: [sendMessage](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#152-227) captures stale `messages` from closure**
+- Line 153: `const { messages } = get();` captures messages at call time, but [addMessage](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#66-74) mutates state synchronously before the API call. The `context` sent to the API doesn't include the user's message.
+- **Fix**: Retrieve `messages` via [get()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/localDB.ts#43-47) after calling [addMessage](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/stores/useGameStore.ts#66-74).
+
+---
+
+#### [MODIFY] [localDB.ts](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/localDB.ts)
+
+**Bug #5: [exportSave](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/localDB.ts#106-114) uses `Record<string, any>` (TS strict violation)**
+- Line 108: Uses `any` type without an eslint-disable comment, which will fail the strict `noUnusedLocals` + ESLint `@typescript-eslint/no-explicit-any` check.
+- **Fix**: Add `// eslint-disable-next-line @typescript-eslint/no-explicit-any` or use `unknown`.
+
+---
+
+#### [MODIFY] [MainLayout.tsx](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/components/layout/MainLayout.tsx)
+
+**Bug #6: `useEffect` dependency on `user` object reference causes infinite re-runs**
+- Line 80: `[user, addEvent, removeEvent]` — `user` is an object, changing on every Zustand update, triggering this effect to re-run constantly (re-subscribing to Supabase channel or resetting the interval).
+- **Fix**: Use `user?.id` and `user?.currentSector` as dependencies instead of the entire object.
+
+**Bug #7: Missing ambient volume dependency**
+- Line 39: The ambient audio effect depends on `user?.settings?.ambientEnabled` and `user?.faction` but doesn't include `user?.settings?.ambientVolume`. Changing volume on the Settings page won't take effect until the component remounts.
+- **Fix**: Add `user?.settings?.ambientVolume` to the dependency array.
+
+---
+
+#### [MODIFY] [client.ts](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/client.ts)
+
+**Bug #8: `ApiClient.isAvailable()` doesn't consider Supabase**
+- Line 49-51: [isAvailable()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/client.ts#49-52) only checks `this.isConfigured` (GAS endpoint), but [chat()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/client.ts#107-121) prioritizes Supabase edge functions. So [isAvailable()](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/client.ts#49-52) returns `false` when only Supabase is configured (no GAS endpoint), causing the UI to show `[GRID: LOCAL]` even when Supabase is fully functional.
+- **Fix**: Return `this.isConfigured || isSupabaseConfigured`.
+
+---
+
+### Code Quality & Consistency
+
+#### [MODIFY] [localDB.ts](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/localDB.ts)
+
+- Line 108: Replace bare `any` with `unknown` or add eslint-disable comment.
+
+#### [MODIFY] [client.ts](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/client.ts)
+
+- Line 8: `Record<string, any>` — add eslint-disable or type properly.
+
+#### [MODIFY] [supabaseDB.ts](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts)
+
+- Line 446: `Record<string, any>` in [updateLoreStatus](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/services/supabaseDB.ts#443-465) — same pattern.
+
+#### [MODIFY] [main.tsx](file:///wsl.localhost/Ubuntu/home/vortex/WebApp/src/main.tsx)
+
+- Lines 13-20: TODO comment for `sw.js` that registers a service worker that may not exist. If `sw.js` doesn't exist in `/public`, this silently fails on every load. Either add a `sw.js` placeholder or remove the manual registration (VitePWA plugin handles this automatically via `registerType: 'autoUpdate'`).
+
+---
+
+### UI/UX Alignment (Deferred)
+
+> [!NOTE]
+> I'll defer the full UI/UX audit (Phase 5) until after building and running the app in the browser. Visual issues require live inspection at different viewports. Currently flagging known issues from static analysis only:
+
+- **ErrorBoundary** uses hardcoded `var(--text-primary)` CSS variables inside inline `style` blocks on buttons, but the error screen sets its own `#0D0D0D` background — the CSS variables may not resolve correctly if the theme hasn't been applied yet (component renders outside [useTheme](file://wsl.localhost/Ubuntu/home/vortex/WebApp/src/hooks/useTheme.ts#6-67)).
+
+---
+
+## Verification Plan
+
+### Automated Tests
+
+1. **Build check**: Run `npm run build` in the WSL terminal — must exit with 0 errors.
+2. **Lint check**: Run `npm run lint` — must exit with 0 errors.
+3. **Existing test**: Run `npx vitest run` — the existing [App.test.tsx](file://wsl.localhost/Ubuntu/home/vortex/WebApp/App.test.tsx) must still pass.
+
+### Manual Verification (Browser)
+
+> [!IMPORTANT]
+> I need you to help me run the commands. Please run these in your WSL terminal and share the output:
+> 1. `cd /home/vortex/WebApp && npm run build 2>&1`
+> 2. `cd /home/vortex/WebApp && npm run lint 2>&1`
+>
+> This will let me identify any additional TypeScript/ESLint errors to include in the fix batch.
+
+After applying fixes:
+1. Start dev server (`npm run dev`) and open in browser
+2. Verify boot sequence → login → terminal page loads correctly
+3. Navigate through all pages (Terminal, Profile, World, Quests, Faction, Codex, Ranks, Settings)
+4. Verify Settings toggles work (sound, ambient, CRT flicker, scanline slider)
+5. Check header status shows `[GRID: LINKED]` when Supabase is configured
+6. Verify sign-out → sign-in preserves user data

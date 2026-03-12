@@ -20,6 +20,7 @@ export const Leaderboard: React.FC = () => {
         if (user) {
             mock.push({ rank: 42, designation: user.designation || 'UNKNOWN', faction: user.faction || 'TECHNOCRATS', playerRank: user.rank || 'INITIATE', prestige: user.prestige || 0, isCurrentUser: true });
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setEntries(mock);
     }, [fetchFactionData, user]);
 
@@ -69,7 +70,7 @@ export const Leaderboard: React.FC = () => {
                         const fd = FACTIONS.find(x => x.id === e.faction);
                         const color = fd ? fd.color : 'var(--text-primary)';
                         return (
-                            <div key={e.rank || Math.random()} className={`ppage__rank-row ${e.isCurrentUser ? 'ppage__rank-row--self' : ''}`}>
+                            <div key={`${e.designation}-${e.rank}`} className={`ppage__rank-row ${e.isCurrentUser ? 'ppage__rank-row--self' : ''}`}>
                                 <div className="ppage__rank-num">#{e.rank || '?'}</div>
                                 <div className="ppage__rank-name">
                                     {e.designation || 'UNKNOWN'}

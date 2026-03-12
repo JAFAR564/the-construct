@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import * as db from '@/services/supabaseDB';
 import type { AuditLog, UserRole } from '@/types';
@@ -19,16 +19,17 @@ export const AdminDashboard: React.FC = () => {
         'GRANT_XP', 'GRANT_ITEM', 'MODIFY_STATS'
     ];
 
-    useEffect(() => {
-        if (user?.role === 'ADMIN') {
-            loadAuditLogs();
-        }
-    }, [user]);
-
-    const loadAuditLogs = async () => {
+    const loadAuditLogs = useCallback(async () => {
         const logs = await db.getAuditLogs(50);
         setAuditLogs(logs);
-    };
+    }, []);
+
+    useEffect(() => {
+        if (user?.role === 'ADMIN') {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            loadAuditLogs();
+        }
+    }, [user, loadAuditLogs]);
 
     const handleElevate = async () => {
         if (!targetUserId) return;

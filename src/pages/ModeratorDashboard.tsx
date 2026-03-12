@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import * as db from '@/services/supabaseDB';
 import { generateLocalEvent } from '@/services/eventGenerator';
@@ -8,7 +8,7 @@ import '@/styles/PremiumPage.css';
 export const ModeratorDashboard: React.FC = () => {
     const user = useGameStore(state => state.user);
     const addEvent = useGameStore(state => state.addEvent);
-    const permissions = user?.permissions || [];
+    const permissions = useMemo(() => user?.permissions || [], [user?.permissions]);
     
     const [selectedEventType, setSelectedEventType] = useState<EventType>('ANOMALY');
     const [targetSector, setTargetSector] = useState(0);
@@ -18,16 +18,16 @@ export const ModeratorDashboard: React.FC = () => {
     const [moderatorNotes, setModeratorNotes] = useState<Record<string, string>>({});
     const [isProcessing, setIsProcessing] = useState(false);
 
+    const fetchPendingLore = useCallback(async () => {
+        const entries = await db.getLoreEntries('PENDING');
+        setPendingLore(entries);
+    }, []);
+
     React.useEffect(() => {
         if (permissions.includes('USER_WARN') || user?.role === 'ADMIN') {
             fetchPendingLore();
         }
-    }, [user, permissions]);
-
-    const fetchPendingLore = async () => {
-        const entries = await db.getLoreEntries('PENDING');
-        setPendingLore(entries);
-    };
+    }, [user?.role, permissions, fetchPendingLore]);
 
     const handleProcessLore = async (entryId: string, status: 'CANON' | 'REJECTED') => {
         if (!user || !user.id) return;

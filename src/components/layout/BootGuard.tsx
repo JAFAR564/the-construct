@@ -15,27 +15,27 @@ export const BootGuard: React.FC = () => {
 
     useEffect(() => {
         const init = async () => {
-            await initializeBootState();
+            try {
+                await initializeBootState();
 
-            // Try Supabase auth first
-            if (isSupabaseConfigured) {
-                try {
-                    const authUser = await auth.getAuthUser();
-                    if (authUser) {
-                        // FIX: Do not load just the user. Let the store handle the massive Promise.all
-                        // which correctly retrieves the Array chunks (Messages, Quests, Journal, etc.)
-                        await initializeFromDB();
-                        setLoading(false);
-                        return;
+                // Try Supabase auth first
+                if (isSupabaseConfigured) {
+                    try {
+                        const authUser = await auth.getAuthUser();
+                        if (authUser) {
+                            await initializeFromDB();
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('[BootGuard] Supabase auth check failed:', e);
                     }
-                } catch (e) {
-                    console.warn('[BootGuard] Supabase auth check failed:', e);
                 }
-            }
 
-            // Fallback to local DB
-            await initializeFromDB();
-            setLoading(false);
+                // Fallback to local DB
+                await initializeFromDB();
+            } finally {
+                setLoading(false);
+            }
         };
 
         init();

@@ -100,6 +100,7 @@ export const WorldMap: React.FC = () => {
         if (!playerSector?.adjacentSectors.includes(selectedSector.id)) { setActionMessage('⚠ Cannot travel — sector is not adjacent.'); return; }
         setIsActing(true); setTravelNarrative(null);
         const fromName = playerSector?.name || 'Unknown';
+        // eslint-disable-next-line react-hooks/purity -- Math.random is valid inside event handlers
         const template = TRAVEL_NARRATIVES[Math.floor(Math.random() * TRAVEL_NARRATIVES.length)];
         setTravelNarrative(template(fromName, selectedSector.name));
         setTimeout(() => {

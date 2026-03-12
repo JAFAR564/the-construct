@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import * as db from '@/services/supabaseDB';
 import type { LoreEntry, Classification, JournalEntry } from '@/types';
@@ -26,15 +26,7 @@ export const Codex: React.FC = () => {
     const [journals, setJournals] = useState<JournalEntry[]>([]);
     const [showJournalModal, setShowJournalModal] = useState(false);
 
-    useEffect(() => {
-        if (activeTab === 'ARCHIVE') {
-            fetchLore('CANON');
-        } else if (activeTab === 'PENDING') {
-            fetchLore('PENDING');
-        }
-    }, [activeTab]);
-
-    const fetchLore = async (status: 'CANON' | 'PENDING') => {
+    const fetchLore = useCallback(async (status: 'CANON' | 'PENDING') => {
         setIsLoading(true);
         try {
             const entries = await db.getLoreEntries(status);
@@ -44,7 +36,15 @@ export const Codex: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (activeTab === 'ARCHIVE') {
+            fetchLore('CANON');
+        } else if (activeTab === 'PENDING') {
+            fetchLore('PENDING');
+        }
+    }, [activeTab, fetchLore]);
 
     const handleOpenJournalModal = async () => {
         if (!user) return;
@@ -264,7 +264,7 @@ export const Codex: React.FC = () => {
                                             {entry.content}
                                         </div>
                                         {entry.moderatorNotes && (
-                                            <div style={{ marginTop: 12, paddingThop: 8, borderTop: '1px solid rgba(255,0,0,0.2)', color: 'var(--accent-danger)', fontSize: '11px' }}>
+                                            <div style={{ marginTop: 12, paddingTop: 8, borderTop: '1px solid rgba(255,0,0,0.2)', color: 'var(--accent-danger)', fontSize: '11px' }}>
                                                 <strong>MODERATOR NOTE:</strong> {entry.moderatorNotes}
                                             </div>
                                         )}
