@@ -390,10 +390,7 @@ export function subscribeToChannel(
 // ── LORE ENTRIES ──
 
 export async function getLoreEntries(status?: LoreStatus): Promise<LoreEntry[]> {
-    if (!isSupabaseConfigured) {
-        console.warn('[SupabaseDB] getLoreEntries: Supabase not configured');
-        return [];
-    }
+    if (!isSupabaseConfigured) return [];
 
     let query = supabase.from('lore_entries').select('*');
     if (status) {
@@ -402,17 +399,7 @@ export async function getLoreEntries(status?: LoreStatus): Promise<LoreEntry[]> 
 
     const { data, error } = await query.order('created_at', { ascending: false });
 
-    if (error) {
-        console.error('[SupabaseDB] Error fetching lore entries:', error);
-        return [];
-    }
-    
-    if (!data) {
-        console.warn('[SupabaseDB] No data returned for lore entries');
-        return [];
-    }
-
-    console.log(`[SupabaseDB] Fetched ${data.length} lore entries`);
+    if (error || !data) return [];
     return data.map(mapDbLoreEntryToLoreEntry);
 }
 

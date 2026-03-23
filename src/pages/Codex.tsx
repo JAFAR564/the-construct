@@ -9,6 +9,35 @@ const CLASSIFICATIONS: Classification[] = ['FACTION_INTEL', 'SECTOR_REPORT', 'HI
 
 type CodexTab = 'ARCHIVE' | 'CHRONICLE' | 'PENDING';
 
+const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
+    // Basic regex-based markdown parser
+    const lines = content.split('\n');
+    return (
+        <div className="markdown-body">
+            {lines.map((line, idx) => {
+                // Headers
+                if (line.startsWith('## ')) return <h2 key={idx}>{line.replace('## ', '')}</h2>;
+                if (line.startsWith('# ')) return <h1 key={idx}>{line.replace('# ', '')}</h1>;
+                
+                // Blockquotes
+                if (line.startsWith('> ')) return <blockquote key={idx}>{line.replace('> ', '')}</blockquote>;
+                
+                // Lists
+                if (line.trim().startsWith('- ')) return <li key={idx} style={{ marginLeft: '1rem', listStyleType: 'square' }}>{line.trim().replace('- ', '')}</li>;
+                
+                // Bold and Italic (simple version)
+                let processedLine: React.ReactNode = line;
+                if (line.includes('**')) {
+                    const parts = line.split('**');
+                    processedLine = parts.map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part);
+                }
+
+                return line.trim() === '' ? <br key={idx} /> : <p key={idx}>{processedLine}</p>;
+            })}
+        </div>
+    );
+};
+
 export const Codex: React.FC = () => {
     const { user } = useGameStore();
     const [activeTab, setActiveTab] = useState<CodexTab>('ARCHIVE');
@@ -28,10 +57,8 @@ export const Codex: React.FC = () => {
 
     const fetchLore = useCallback(async (status: 'CANON' | 'PENDING') => {
         setIsLoading(true);
-        console.log(`[Codex] Fetching lore with status: ${status}`);
         try {
             const entries = await db.getLoreEntries(status);
-            console.log(`[Codex] Status: ${status}, Received entries:`, entries);
             setLoreEntries(status === 'CANON' ? entries : entries.filter(e => e.status === 'PENDING' && e.authorId === user?.id));
         } catch (err) {
             console.error("Failed to load lore:", err);
@@ -74,7 +101,6 @@ export const Codex: React.FC = () => {
                 status: 'PENDING',
                 clearanceLevel: 'INITIATE',
             };
-            console.log('Submitting lore to database queue:', newEntry);
             await db.submitLoreEntry(newEntry);
             alert('Lore sequence transmitted to the pending cache for review.');
             setDraftTitle('');
@@ -172,9 +198,24 @@ export const Codex: React.FC = () => {
                                                 <div style={{ color: 'var(--faction-active)', fontWeight: 700, fontSize: '15px', textShadow: '0 0 8px rgba(0, 255, 65, 0.2)' }}>{entry.title}</div>
                                                 <span className="ppage__badge" style={{ borderColor: 'var(--text-muted)', color: 'var(--text-muted)' }}>{entry.classification}</span>
                                             </div>
-                                            <div style={{ color: 'var(--text-secondary)', fontSize: '13px', whiteSpace: 'pre-wrap', lineHeight: 1.6, position: 'relative', zIndex: 1 }}>
-                                                {entry.content}
+                                            <div className="ppage__lore-content" style={{ position: 'relative', zIndex: 1 }}>
+                                                <MarkdownRenderer content={entry.content} />
                                             </div>
+                                            <div className="ppage__flex-between" style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '10px', color: 'var(--text-muted)', position: 'relative', zIndex: 1 }}>
+                                                <span>AUTHOR: {entry.authorId || 'UNKNOWN'}</span>
+                                                <span style={{ color: 'var(--accent-info)' }}>DATE: {new Date(entry.createdAt).toLocaleDateString()}</span>
+                                                <span>CLEARANCE: {entry.clearanceLevel}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="ppage__empty">NO CANONIZED RECORDS FOUND.</div>
+                        )
+                    )}
+                </div>
+            )}
                                             <div className="ppage__flex-between" style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '10px', color: 'var(--text-muted)', position: 'relative', zIndex: 1 }}>
                                                 <span>AUTHOR: {entry.authorId || 'UNKNOWN'}</span>
                                                 <span style={{ color: 'var(--accent-info)' }}>DATE: {new Date(entry.createdAt).toLocaleDateString()}</span>
