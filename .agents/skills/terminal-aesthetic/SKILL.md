@@ -85,3 +85,7 @@ When a page needs to break out of the `main-content` max-width:
 - Keep animations subtle: 0.15s–0.35s duration
 - Common keyframes: `fadeIn`, `slideUp`, `pulse`
 - Never animate `width` or `height` — use `transform` and `opacity`
+
+## Vibe Check: Context Pinning
+- **PRO TIP**: To save tokens and prevent "Context Decay" in the 4GB RAM environment, only "pin" the files you are currently editing.
+- Use `/generate-handover` frequently to keep your Vibe-State fresh.

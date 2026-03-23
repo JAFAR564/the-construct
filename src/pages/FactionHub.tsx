@@ -6,6 +6,7 @@ import { ChannelSidebar } from '@/components/messenger/ChannelSidebar';
 import { ChatHeader } from '@/components/messenger/ChatHeader';
 import { ChatBubble } from '@/components/messenger/ChatBubble';
 import { MessengerInput } from '@/components/messenger/MessengerInput';
+import { FactionGlobe } from '@/components/ui/FactionGlobe';
 import type { ChannelMessage } from '@/types';
 import '@/components/messenger/MessengerLayout.css';
 
@@ -16,6 +17,7 @@ export const FactionHub: React.FC = () => {
         setActiveChannel, addChannelMessage, addReaction, startCombat,
     } = useChatStore();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 769);
+    const [showGlobe, setShowGlobe] = useState(false);
     const feedRef = useRef<HTMLDivElement>(null);
 
     // Responsive: auto-collapse sidebar on mobile
@@ -169,12 +171,16 @@ export const FactionHub: React.FC = () => {
                             channel={activeChannel}
                             sidebarCollapsed={sidebarCollapsed}
                             onToggleSidebar={() => setSidebarCollapsed(c => !c)}
+                            showGlobe={showGlobe}
+                            onToggleGlobe={() => setShowGlobe(!showGlobe)}
                             channels={channels}
                             onSelectChannel={setActiveChannel}
                         />
 
-                        {/* Message feed or Combat Arena */}
-                        {activeChannel.type === 'combat' && combatSessions[activeChannel.id] ? (
+                        {/* Message feed, Combat Arena, or Tactical Globe */}
+                        {showGlobe ? (
+                            <FactionGlobe />
+                        ) : activeChannel.type === 'combat' && combatSessions[activeChannel.id] ? (
                             <CombatArena channelId={activeChannel.id} />
                         ) : (
                             <div ref={feedRef} className="msger-chat__feed">

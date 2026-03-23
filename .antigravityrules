@@ -1,0 +1,24 @@
+# GLOBAL ARCHITECTURAL PRINCIPLES
+- Enforce clean, atomic code changes. Never rewrite a full file if a surgical, inline edit is possible.
+- Adhere to the established stack: React (v19) + Vite, React Router v7, Zustand (state), Lucide-React (icons), Vanilla CSS.
+- Maintain strict separation of concerns. Keep business logic outside of UI components.
+
+# MARCH 2026 VIBE CODING PROTOCOLS
+- **Vibe Modes**:
+  - Always check the Persona panel or `.agents/agents/` to verify your active Vibe.
+  - **The Architect** (Pro): Use for complex logic and system design.
+  - **The Sprinter** (Flash): Use for one-off fixes, UI tweaks, and unit tests.
+  - **The Auditor** (Claude): Use for security reviews and critical edge-case analysis.
+- **Context Pinning**: "Pin" only the files being worked on and the relevant `.antigravityrules`. Ignore the rest of the workspace to save quota and memory.
+- **Auto-Lint & Strict Mode**: When generating an "Implementation Plan", emphasize test-driven development (Strict Mode) to reduce long-term quota waste.
+
+# HYBRID HARDWARE CONSTRAINTS (VIVOBOOK 4GB RAM)
+- CRITICAL: Filesystem & GitHub MCPs operate in WSL (SSH). Supabase MCP operates natively on Windows. Do not cross-contaminate OS paths.
+- ZERO BACKGROUND PROCESSING: NEVER auto-run `npm install`, `dev`, or `build`. Provide commands for external terminal execution.
+- RAM LIMIT: IDE memory is capped at 1024MB. Prioritize static analysis over indexing.
+- **Context Reset**: Every 20-30 interactions, trigger `/generate-handover` and start a fresh session to preserve Pro tokens.
+
+# DATABASE & STATE MANAGEMENT
+- Consult Supabase schema or NotebookLM (ID: df413add-177b-46f6-a54a-5001925cdff9) before writing DB logic.
+- Known Schema: users, messages, equipment, abilities, quests, memory_log, factions, sectors, chat_channels, channel_messages, combat_sessions, war_history.
+- Always verify RLS policies.

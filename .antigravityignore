@@ -1,0 +1,41 @@
+# Libraries (The biggest RAM-eaters)
+node_modules/
+bower_components/
+jspm_packages/
+
+# Build outputs and temporary files
+dist/
+build/
+.next/
+.nuxt/
+out/
+.cache/
+.parcel-cache/
+
+# Vite, TypeScript & Linting Cache (New additions for your stack)
+.eslintcache
+*.tsbuildinfo
+coverage/
+
+# Supabase & Antigravity System Files (Protecting your 4GB RAM)
+.supabase/
+.antigravity-state  # Prevents the agent from reading its own memory dumps constantly
+*.swp               # Ignore any temporary Linux swap files in the directory
+
+# Version control and logs
+.git/
+.svn/
+.hg/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+
+# OS-specific files
+.DS_Store
+Thumbs.db

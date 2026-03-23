@@ -1,7 +1,7 @@
 {
-  "name": "temp-app",
+  "name": "the-construct",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
+    "cobe": "^2.0.1",
     "localforage": "^1.10.0",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",
