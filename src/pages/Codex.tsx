@@ -28,8 +28,10 @@ export const Codex: React.FC = () => {
 
     const fetchLore = useCallback(async (status: 'CANON' | 'PENDING') => {
         setIsLoading(true);
+        console.log(`[Codex] Fetching lore with status: ${status}`);
         try {
             const entries = await db.getLoreEntries(status);
+            console.log(`[Codex] Status: ${status}, Received entries:`, entries);
             setLoreEntries(status === 'CANON' ? entries : entries.filter(e => e.status === 'PENDING' && e.authorId === user?.id));
         } catch (err) {
             console.error("Failed to load lore:", err);
