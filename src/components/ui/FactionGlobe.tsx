@@ -1,8 +1,13 @@
-import createGlobe from 'cobe';
+import createGlobe, { COBEOptions } from 'cobe';
 import { useEffect, useRef, useState } from 'react';
 import { getSectorCoordinates } from '../../utils/mapUtils';
 import { useFactionStore } from '../../stores/useFactionStore';
 import './FactionGlobe.css';
+
+// Extension of COBEOptions to include onRender which is missing from library types but present in API
+interface ExtendedCOBEOptions extends COBEOptions {
+  onRender?: (state: Record<string, any>) => void;
+}
 
 export const FactionGlobe = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,7 +29,7 @@ export const FactionGlobe = () => {
     window.addEventListener('resize', onResize);
     onResize();
 
-    const globe = createGlobe(canvasRef.current!, {
+    const globeOptions: ExtendedCOBEOptions = {
       devicePixelRatio: 2,
       width: width * 2,
       height: width * 2,
@@ -40,9 +45,10 @@ export const FactionGlobe = () => {
       markers: sectors.map(s => {
         const [lat, lng] = getSectorCoordinates(s.id);
         let color: [number, number, number] = [0.5, 0.5, 0.5];
-        if (s.controlledBy === 'Technocrats') color = [0, 0.6, 1];
-        if (s.controlledBy === 'Keepers') color = [0, 1, 0.4];
-        if (s.controlledBy === 'Ironborn') color = [1, 0.2, 0];
+        // Correcting Faction identifier strings to match system-defined types
+        if (s.controlledBy === 'TECHNOCRATS') color = [0, 0.6, 1];
+        if (s.controlledBy === 'KEEPERS_OF_THE_VEIL') color = [0, 1, 0.4];
+        if (s.controlledBy === 'IRONBORN_COLLECTIVE') color = [1, 0.2, 0];
         
         return { location: [lat, lng], size: 0.08, color };
       }),
@@ -51,11 +57,15 @@ export const FactionGlobe = () => {
           currentPhi += 0.005;
         }
         state.phi = currentPhi + phi;
-        width = canvasRef.current!.offsetWidth;
-        state.width = width * 2;
-        state.height = width * 2;
+        if (canvasRef.current) {
+          width = canvasRef.current.offsetWidth;
+          state.width = width * 2;
+          state.height = width * 2;
+        }
       }
-    });
+    };
+
+    const globe = createGlobe(canvasRef.current!, globeOptions as COBEOptions);
 
     return () => {
       globe.destroy();

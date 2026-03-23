@@ -1,4 +1,4 @@
-import { Sector } from '../types';
+import type { Sector } from '../types';
 
 export interface GlobeMarker {
   location: [number, number]; // [lat, lng]
