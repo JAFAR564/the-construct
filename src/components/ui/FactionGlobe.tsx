@@ -1,4 +1,5 @@
-import createGlobe, { COBEOptions } from 'cobe';
+import createGlobe from 'cobe';
+import type { COBEOptions } from 'cobe';
 import { useEffect, useRef, useState } from 'react';
 import { getSectorCoordinates } from '../../utils/mapUtils';
 import { useFactionStore } from '../../stores/useFactionStore';
