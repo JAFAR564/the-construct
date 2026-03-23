@@ -368,16 +368,18 @@ CREATE TABLE lore_entries (
   title TEXT NOT NULL,
   content TEXT NOT NULL,
   author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  status_canon BOOLEAN NOT NULL DEFAULT false,
+  status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'CANON', 'REJECTED')),
   classification TEXT NOT NULL DEFAULT 'HISTORICAL_RECORD' CHECK (classification IN ('FACTION_INTEL', 'SECTOR_REPORT', 'HISTORICAL_RECORD', 'ANOMALY_LOG', 'NPC_DOSSIER')),
   clearance_level TEXT NOT NULL DEFAULT 'INITIATE',
   tags TEXT[] DEFAULT ARRAY[]::TEXT[],
   upvotes INTEGER NOT NULL DEFAULT 0,
+  moderator_notes TEXT,
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_lore_entries_status ON lore_entries(status_canon, created_at DESC);
+CREATE INDEX idx_lore_entries_status ON lore_entries(status, created_at DESC);
 CREATE INDEX idx_lore_entries_author ON lore_entries(author_id);
 
 -- ============================
@@ -402,10 +404,10 @@ ALTER TABLE lore_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE world_events ENABLE ROW LEVEL SECURITY;
 
 -- Lore Entries policies
-CREATE POLICY "Anyone can read canon lore" ON lore_entries FOR SELECT USING (status_canon = true);
+CREATE POLICY "Anyone can read canon lore" ON lore_entries FOR SELECT USING (status = 'CANON');
 CREATE POLICY "Authors can read their own lore" ON lore_entries FOR SELECT USING (author_id IN (SELECT id FROM users WHERE auth_id = auth.uid()));
 CREATE POLICY "Authenticated users can draft lore" ON lore_entries FOR INSERT WITH CHECK (auth.uid() IS NOT NULL AND author_id IN (SELECT id FROM users WHERE auth_id = auth.uid()));
-CREATE POLICY "Authors can update their uncanonized lore" ON lore_entries FOR UPDATE USING (author_id IN (SELECT id FROM users WHERE auth_id = auth.uid()) AND status_canon = false);
+CREATE POLICY "Authors can update their uncanonized lore" ON lore_entries FOR UPDATE USING (author_id IN (SELECT id FROM users WHERE auth_id = auth.uid()) AND status = 'PENDING');
 
 -- World Events policies
 CREATE POLICY "Anyone can read active world events" ON world_events FOR SELECT USING (true);
